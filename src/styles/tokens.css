@@ -78,6 +78,11 @@
   --dur-reveal: 1s;
   --dur-slow: 1.5s;
 
+  /* Hover is asymmetric on purpose: quick enough in to feel responsive,
+     slow out so the element settles rather than snapping back. */
+  --dur-hover-in: 0.55s;
+  --dur-hover-out: 1.05s;
+
   --stagger-line: 0.04s;   /* between masked lines of a heading */
   --stagger-block: 0.05s;  /* between sibling blocks */
 
@@ -97,6 +102,8 @@
     --dur-base: 0.01ms;
     --dur-reveal: 0.01ms;
     --dur-slow: 0.01ms;
+    --dur-hover-in: 0.01ms;
+    --dur-hover-out: 0.01ms;
     --stagger-line: 0s;
     --stagger-block: 0s;
   }

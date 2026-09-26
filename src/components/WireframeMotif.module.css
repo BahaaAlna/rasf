@@ -28,10 +28,11 @@
   border-radius: 3px;
   opacity: 1;
   animation: draw var(--dur-reveal) var(--ease-out-expo) var(--delay) backwards;
+  /* Declared here, this governs the way OUT of hover. */
   transition:
-    border-color var(--dur-base) var(--ease-out-expo),
-    opacity var(--dur-base) var(--ease-out-power4),
-    transform var(--dur-base) var(--ease-out-expo);
+    border-color var(--dur-hover-out) var(--ease-out-expo),
+    opacity var(--dur-hover-out) var(--ease-out-power3),
+    transform var(--dur-hover-out) var(--ease-out-expo);
 }
 
 .cell::before {
@@ -42,7 +43,7 @@
   opacity: 1;
   animation: fill var(--dur-reveal) var(--ease-out-power3)
     calc(var(--delay) + 0.75s) backwards;
-  transition: background var(--dur-base) var(--ease-out-expo);
+  transition: background var(--dur-hover-out) var(--ease-out-expo);
 }
 
 @keyframes draw {
@@ -61,18 +62,26 @@
 /* ---- Pointer response ------------------------------------------------
    The hovered block takes the accent; its neighbours recede. :has lets
    the whole plan react to one block without any JavaScript.           */
+/* Declared here, this governs the way IN. */
 .cell:hover {
   border-color: var(--accent);
   transform: scale(1.04);
   z-index: 1;
+  transition:
+    border-color var(--dur-hover-in) var(--ease-out-expo),
+    transform var(--dur-hover-in) var(--ease-out-expo);
 }
 
 .cell:hover::before {
   background: var(--accent);
+  transition: background var(--dur-hover-in) var(--ease-out-expo);
 }
 
+/* Neighbours never match :hover, so they need their own inbound timing
+   or they would fade using the slow outbound one in both directions. */
 .motif:has(.cell:hover) .cell:not(:hover) {
   opacity: 0.45;
+  transition: opacity var(--dur-hover-in) var(--ease-out-power3);
 }
 
 /* The accent block inverts instead, so it still registers as a change. */
