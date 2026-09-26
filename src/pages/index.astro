@@ -1,11 +1,42 @@
 ---
+import { getImage } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header';
 import Hero from '../components/Hero';
-import { getHero } from '../lib/content';
+import PlaceholderSection from '../components/PlaceholderSection.astro';
+import logoSrc from '../assets/logo-ar.png';
+import { getHero, getUI, getSite } from '../lib/content';
+import { alternatePath } from '../lib/i18n';
 
 const copy = getHero('ar');
+const ui = getUI('ar');
+const site = getSite('ar');
+const logo = await getImage({ src: logoSrc, format: 'webp', width: 480 });
 ---
 
 <BaseLayout path="/">
-  <Hero client:load lead={copy.lead} words={copy.words} interval={copy.interval} listSeparator="، " />
+  <Header
+    slot="header"
+    logo={{ src: logo.src, width: logo.attributes.width, height: logo.attributes.height }}
+    siteName={site.name}
+    nav={ui.nav}
+    switchHref={alternatePath(Astro.url, 'en')}
+    switchLabel={ui.switchTo}
+    switchLang="en"
+  />
+
+  <Hero
+    client:load
+    lead={copy.lead}
+    words={copy.words}
+    interval={copy.interval}
+    support={ui.heroSupport}
+    actions={ui.actions}
+    listSeparator="، "
+  />
+
+  <PlaceholderSection id="work" title={ui.nav.work} />
+  <PlaceholderSection id="services" title={ui.nav.services} />
+  <PlaceholderSection id="about" title={ui.nav.about} />
+  <PlaceholderSection id="contact" title={ui.nav.contact} />
 </BaseLayout>

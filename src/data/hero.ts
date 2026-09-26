@@ -22,13 +22,13 @@ export interface HeroCopy {
 
 export const hero: Record<Locale, HeroCopy> = {
   ar: {
-    lead: 'نبني لأعمالك', // TODO: placeholder
-    words: ['مواقع', 'متاجر', 'واجهات'], // TODO: placeholder
-    interval: 2.4,
+    lead: 'نبني لأعمالك مواقع',
+    words: ['أسرع', 'أوضح', 'تبيع أكثر'],
+    interval: 2.6,
   },
   en: {
-    lead: 'We build your business', // TODO: placeholder
-    words: ['websites', 'stores', 'interfaces'], // TODO: placeholder
-    interval: 2.4,
+    lead: 'Websites for your business that',
+    words: ['load faster', 'feel clearer', 'sell more'],
+    interval: 2.6,
   },
 };

@@ -8,6 +8,9 @@ export interface HeroProps {
   words: string[];
   /** Seconds each word is held. */
   interval: number;
+  /** Supporting line beneath the sentence. */
+  support: string;
+  actions: { viewWork: string; contact: string };
   /** Separator used when the words are read out as a list. */
   listSeparator?: string;
 }
@@ -17,7 +20,14 @@ export interface HeroProps {
  * shares one grid cell, so the line's width is fixed by the longest word
  * and swapping causes no layout shift.
  */
-export default function Hero({ lead, words, interval, listSeparator = ', ' }: HeroProps) {
+export default function Hero({
+  lead,
+  words,
+  interval,
+  support,
+  actions,
+  listSeparator = ', ',
+}: HeroProps) {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -63,6 +73,22 @@ export default function Hero({ lead, words, interval, listSeparator = ', ' }: He
           </span>
         </span>
       </h1>
+
+      <p className={styles.support} data-reveal style={{ "--reveal-delay": "0.15s" } as React.CSSProperties}>
+        {support}
+      </p>
+
+      <div className={styles.actions} data-reveal style={{ "--reveal-delay": "0.25s" } as React.CSSProperties}>
+        <a className={`${styles.action} ${styles.actionPrimary}`} href="#work">
+          {actions.viewWork}
+          <svg className={styles.arrow} width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+            <path d="M2 7h10M8 3l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+        </a>
+        <a className={`${styles.action} ${styles.actionGhost}`} href="#contact">
+          {actions.contact}
+        </a>
+      </div>
     </section>
   );
 }

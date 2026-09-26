@@ -32,3 +32,11 @@ export function getHero(locale: Locale) {
 }
 
 export type HeroContent = ReturnType<typeof getHero>;
+
+import { ui } from '../data/ui';
+
+export function getUI(locale: Locale) {
+  return ui[locale];
+}
+
+export type UIContent = ReturnType<typeof getUI>;

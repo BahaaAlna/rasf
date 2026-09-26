@@ -168,6 +168,37 @@ ol {
   transform: translateY(0);
 }
 
+/* ---- Reveal on scroll -----------------------------------------------
+   Elements marked [data-reveal] rise into place once. A single shared
+   IntersectionObserver in BaseLayout drives every one of them.          */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(1.5rem);
+  transition:
+    opacity var(--dur-reveal) var(--ease-out-power3),
+    transform var(--dur-reveal) var(--ease-out-expo);
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* Without JS, and under reduced motion, content is simply present. */
+.no-js [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 /* Directional icons mirror in RTL. */
 [dir='rtl'] .u-flip {
   transform: scaleX(-1);

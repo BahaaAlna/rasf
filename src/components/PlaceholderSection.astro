@@ -1,0 +1,43 @@
+---
+/*
+  Temporary scaffolding so the nav anchors resolve and the page scrolls.
+  Each of these is replaced by its real section in a later step.
+*/
+interface Props {
+  id: string;
+  title: string;
+}
+const { id, title } = Astro.props;
+---
+
+<section id={id} class="ph">
+  <h2 class="ph__title" data-reveal>{title}</h2>
+  <p class="ph__note u-mono" data-reveal style="--reveal-delay: 0.08s">Placeholder — this section is not built yet.</p>
+</section>
+
+<style>
+  .ph {
+    min-height: 70svh;
+    display: grid;
+    align-content: center;
+    gap: var(--space-md);
+    padding-inline: var(--gutter);
+    padding-block: var(--space-2xl);
+    max-width: var(--page-max);
+    margin-inline: auto;
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .ph__title {
+    font-size: var(--step-3);
+    color: var(--ink);
+  }
+
+  :global([dir='rtl']) .ph__title {
+    font-size: calc(var(--step-3) * var(--ar-scale));
+  }
+
+  .ph__note {
+    color: var(--ink-muted);
+  }
+</style>

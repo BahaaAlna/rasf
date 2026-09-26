@@ -1,5 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import SmoothScroll from '../components/SmoothScroll';
 import { getLocale, dirFor, localizePath, locales, type Locale } from '../lib/i18n';
 import { getSite } from '../lib/content';
 import '../styles/global.css';
@@ -70,10 +71,49 @@ const ogImage = new URL('/og-default.png', Astro.site ?? content.url);
     <a class="u-skip" href="#main">
       {locale === 'ar' ? 'تخطَّ إلى المحتوى' : 'Skip to content'}
     </a>
+    <SmoothScroll client:idle />
     <slot name="header" />
     <main id="main">
       <slot />
     </main>
     <slot name="footer" />
+
+    <script>
+      // One observer for every [data-reveal] on the page. Cheaper than
+      // hydrating a component per section.
+      //
+      // Islands hydrate after this runs and React replaces the server-
+      // rendered nodes, so observing once at startup silently loses them.
+      // A MutationObserver picks up whatever appears later.
+      const io =
+        'IntersectionObserver' in window
+          ? new IntersectionObserver(
+              (entries) => {
+                entries.forEach((entry) => {
+                  if (!entry.isIntersecting) return;
+                  entry.target.classList.add('is-revealed');
+                  io.unobserve(entry.target);
+                });
+              },
+              { rootMargin: '0px 0px -12% 0px', threshold: 0.1 },
+            )
+          : null;
+
+      const seen = new WeakSet();
+
+      const scan = () => {
+        document.querySelectorAll('[data-reveal]:not(.is-revealed)').forEach((el) => {
+          if (seen.has(el)) return;
+          seen.add(el);
+          if (io) io.observe(el);
+          else el.classList.add('is-revealed');
+        });
+      };
+
+      scan();
+      document.addEventListener('astro:page-load', scan);
+      document.addEventListener('astro:after-swap', scan);
+      new MutationObserver(scan).observe(document.body, { childList: true, subtree: true });
+    </script>
   </body>
 </html>

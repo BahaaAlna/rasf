@@ -43,6 +43,10 @@
   --step-4: clamp(3.16rem, 2rem + 5.6vw, 6.8rem);
   --step-5: clamp(4.2rem, 2rem + 10vw, 11rem);
 
+  /* Hero sentence. Deliberately below --step-4: at display sizes the
+     Arabic multiplier compounds, and --step-4 landed at 141px. */
+  --hero-size: clamp(2.4rem, 1.4rem + 3.6vw, 4.75rem);
+
   --leading-tight: 0.92;
   --leading-body: 1.65;
   --tracking-mono: 0.08em;

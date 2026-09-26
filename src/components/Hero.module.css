@@ -2,28 +2,31 @@
   min-height: 100svh;
   display: grid;
   align-content: center;
+  gap: var(--space-xl);
   padding-inline: var(--gutter);
-  padding-block: var(--space-2xl);
+  /* Clears the sticky header without overflowing a single viewport. */
+  padding-block: var(--space-2xl) var(--space-xl);
   max-width: var(--page-max);
   margin-inline: auto;
 }
 
 .line {
   font-family: var(--font-display);
-  font-size: var(--step-5);
+  font-size: var(--hero-size);
   line-height: var(--leading-tight);
   letter-spacing: -0.03em;
   color: var(--ink);
   margin: 0;
-  text-wrap: balance;
+  max-width: 18ch;
 }
 
 :global([dir='rtl']) .line {
   /* Lateef sets far smaller than Bricolage at the same font-size, so the
      display scale has to be applied here too, not just to body text. */
-  font-size: calc(var(--step-5) * var(--ar-scale));
+  font-size: calc(var(--hero-size) * var(--ar-scale));
   letter-spacing: 0;
   line-height: calc(var(--leading-tight) * var(--ar-leading));
+  max-width: 16ch;
 }
 
 /*
@@ -68,8 +71,83 @@
   color: var(--accent);
 }
 
+.support {
+  font-size: var(--step-1);
+  line-height: 1.45;
+  color: var(--ink-muted);
+  max-width: 42ch;
+  margin: 0;
+}
+
+:global([dir='rtl']) .support {
+  font-size: calc(var(--step-1) * var(--ar-scale));
+  line-height: calc(1.45 * var(--ar-leading));
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--step-0);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--ink);
+  transition:
+    background var(--dur-base) var(--ease-out-power4),
+    color var(--dur-base) var(--ease-out-power4),
+    transform var(--dur-base) var(--ease-out-expo);
+}
+
+.actionPrimary {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.actionPrimary:hover,
+.actionPrimary:focus-visible {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.actionGhost {
+  color: var(--ink);
+}
+
+.actionGhost:hover,
+.actionGhost:focus-visible {
+  background: var(--ink);
+  color: var(--paper);
+  transform: translateY(-2px);
+}
+
+/* Arrow points along the reading direction. */
+.arrow {
+  transition: transform var(--dur-base) var(--ease-out-expo);
+}
+
+:global([dir='rtl']) .arrow {
+  transform: scaleX(-1);
+}
+
+.action:hover .arrow {
+  transform: translateX(3px);
+}
+
+:global([dir='rtl']) .action:hover .arrow {
+  transform: scaleX(-1) translateX(3px);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .word {
+  .word,
+  .action,
+  .arrow {
     transition: none;
   }
 }
