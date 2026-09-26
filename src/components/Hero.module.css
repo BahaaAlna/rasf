@@ -4,6 +4,10 @@
   /* Message and motif share the frame, so neither half sits dead. */
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 32rem);
   align-items: center;
+  /* Without this the single row stretches to the full content box, so
+     the motif's align-self:start snaps to the box top rather than to
+     the first line of the sentence. */
+  align-content: center;
   gap: var(--space-2xl);
   padding-inline: var(--gutter);
   /* Clears the sticky header without overflowing a single viewport. */
@@ -19,20 +23,63 @@
 
 .motif {
   justify-self: stretch;
+  /* The grid row is as tall as the message column, so starting here puts
+     the plan's top edge level with the first line of the sentence. */
+  align-self: start;
   display: grid;
   justify-items: center;
 }
 
 @media (max-width: 60rem) {
   .hero {
-    grid-template-columns: 1fr;
-    align-content: center;
-    gap: var(--space-xl);
+    grid-template-columns: minmax(0, 1fr) minmax(7rem, 13rem);
+    gap: var(--space-lg);
+    min-height: 88svh;
+    padding-block: var(--space-xl) var(--space-lg);
   }
 
   .motif {
-    justify-self: start;
-    width: min(100%, 20rem);
+    --motif-scale: 0.62;
+    align-self: center;
+  }
+}
+
+/* Phones: the plan sits beside the sentence as a narrow, portrait block,
+   which reads as a phone layout rather than a squashed desktop one. */
+@media (max-width: 48rem) {
+  .hero {
+    --hero-size: clamp(1.75rem, 5.2vw, 2.3rem);
+    grid-template-columns: minmax(0, 1fr) minmax(5rem, 7.5rem);
+    gap: var(--space-md);
+    /* A full 100svh left ~250px of dead space above the sentence on a
+       phone. Shorter, and the next section peeks in to invite a scroll. */
+    min-height: 82svh;
+    /* 96px of top padding pushed the hero past the viewport. */
+    padding-block: var(--space-lg) var(--space-md);
+  }
+
+  .message {
+    gap: var(--space-md);
+  }
+
+  .motif {
+    /* Block heights multiply by this, so the plan scales from one
+       number per breakpoint. */
+    --motif-scale: 0.42;
+    /* Beside the sentence, not floating above it. */
+    align-self: center;
+  }
+
+  .support {
+    font-size: var(--step-0);
+  }
+
+  .actions {
+    gap: var(--space-xs);
+  }
+
+  .action {
+    padding: var(--space-xs) var(--space-md);
   }
 }
 
