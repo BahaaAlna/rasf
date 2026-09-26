@@ -40,3 +40,11 @@ export function getUI(locale: Locale) {
 }
 
 export type UIContent = ReturnType<typeof getUI>;
+
+import { origin } from '../data/origin';
+
+export function getOrigin(locale: Locale) {
+  return origin[locale];
+}
+
+export type OriginSection = ReturnType<typeof getOrigin>;

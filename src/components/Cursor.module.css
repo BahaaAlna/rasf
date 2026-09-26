@@ -1,0 +1,90 @@
+/*
+  The dot and the ring it rests in.
+
+  Round, because the mark this brand signs itself with is the dot after
+  the name — the same dot the header sends travelling. A square read as
+  a paving stone, which was the wrong half of the identity for something
+  that follows you everywhere.
+
+  The small disc is locked to the pointer so aim stays exact; the ring
+  lags and catches up when you stop, which is the vocabulary the plan
+  already uses — outline first, fill second.
+
+  Contrast is handled by swapping the ink for paper over dark ground,
+  not by a blend mode. `exclusion` over the accent returns a gold that
+  exists nowhere in the palette, and the palette allows one accent only.
+*/
+
+.root {
+  position: fixed;
+  /*
+    Physical, not logical. These are driven by clientX/clientY, which
+    are measured from the viewport's left edge in every direction, so
+    the anchor has to be the left edge too. `inset-inline-start` would
+    flip to the right under RTL and throw the whole overlay across the
+    screen on the Arabic pages.
+  */
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  pointer-events: none;
+  /* Never mirrored: the cursor belongs to the screen, not the text. */
+  direction: ltr;
+}
+
+.stone,
+.bay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: var(--radius-pill);
+  will-change: transform;
+}
+
+.stone {
+  width: 8px;
+  height: 8px;
+  background: var(--ink);
+  transition:
+    width var(--dur-fast) var(--ease-out-expo),
+    height var(--dur-fast) var(--ease-out-expo),
+    background var(--dur-fast) var(--ease-out-expo);
+}
+
+.bay {
+  width: 32px;
+  height: 32px;
+  border: 1px solid color-mix(in srgb, var(--ink) 38%, transparent);
+  transition:
+    width var(--dur-base) var(--ease-out-expo),
+    height var(--dur-base) var(--ease-out-expo),
+    border-color var(--dur-base) var(--ease-out-expo);
+}
+
+/* Over dark ground the two simply change sides. */
+.onDark .stone {
+  background: var(--paper);
+}
+
+.onDark .bay {
+  border-color: color-mix(in srgb, var(--paper) 55%, transparent);
+}
+
+/* Over something clickable the bay opens to receive the stone. */
+.active .bay {
+  width: 54px;
+  height: 54px;
+  border-color: var(--accent);
+}
+
+.active .stone {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+}
+
+/* Pressed: the bay closes onto the stone. */
+.down .bay {
+  width: 24px;
+  height: 24px;
+}

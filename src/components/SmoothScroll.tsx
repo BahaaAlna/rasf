@@ -14,9 +14,17 @@ export default function SmoothScroll() {
     if (!motionOk.matches) return;
 
     const lenis = new Lenis({
-      // Long and heavily front-loaded, the same shape as the site's easing.
-      duration: 1.1,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      /*
+        Exponential smoothing, not a fixed-duration glide.
+
+        `duration` restarts an easing curve on every wheel event, and the
+        long tail of an expo-out curve is what reads as weight: the page
+        keeps coasting after the wheel has stopped. `lerp` chases the
+        target frame by frame instead, so a flick settles quickly and a
+        slow scroll tracks the wheel. Higher is snappier; 0.1 is the
+        library default and felt fractionally loose here.
+      */
+      lerp: 0.12,
       // Touch devices already have native momentum; doubling it feels wrong.
       smoothWheel: true,
       touchMultiplier: 1.6,

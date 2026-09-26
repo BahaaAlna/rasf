@@ -27,8 +27,18 @@
 
 .cell {
   position: relative;
-  border: 1px solid color-mix(in srgb, var(--ink) 28%, transparent);
-  border-radius: 3px;
+  /* Lighter than the page's hairline: eight outlines stacked at full
+     strength read as a wireframe drawing, not as a soft placeholder. */
+  border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
+  /*
+    The page is square-cornered by direction (--radius: 0), and the plan
+    is the one exception. Each block rounds against its OWN height, so
+    the thin copy lines resolve to pills — the shape a line of text
+    actually makes — while the big blocks stay softly rectangular. A
+    single fixed radius cannot do both: 10px turns a 0.9rem bar into a
+    lozenge, and 3px leaves a 6rem block looking cut.
+  */
+  border-radius: min(0.7rem, calc(var(--cell-h, 4rem) / 2));
   opacity: 1;
   animation: draw var(--dur-reveal) var(--ease-out-expo) var(--delay) backwards;
   /* Declared here, this governs the way OUT of hover. */
@@ -42,6 +52,8 @@
   content: '';
   position: absolute;
   inset: 0;
+  /* Without this the square fill pokes out past the rounded outline. */
+  border-radius: inherit;
   background: var(--cell-fill);
   opacity: 1;
   animation: fill var(--dur-reveal) var(--ease-out-power3)
@@ -168,7 +180,7 @@
   0%,
   14%,
   100% {
-    border-color: color-mix(in srgb, var(--ink) 28%, transparent);
+    border-color: color-mix(in srgb, var(--ink) 16%, transparent);
   }
   4%,
   9% {

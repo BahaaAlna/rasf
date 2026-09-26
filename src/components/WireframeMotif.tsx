@@ -44,7 +44,10 @@ export default function WireframeMotif() {
           style={
             {
               gridColumn: `span ${cell.span}`,
-              height: `calc(${cell.height}rem * var(--motif-scale, 1))`,
+              // Published as a variable so the stylesheet can round each
+              // block against its own height rather than a fixed radius.
+              '--cell-h': `calc(${cell.height}rem * var(--motif-scale, 1))`,
+              height: 'var(--cell-h)',
               '--delay': `${0.35 + i * 0.07}s`,
               '--index': i,
               '--cell-fill': cell.fill,

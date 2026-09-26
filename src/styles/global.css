@@ -112,6 +112,16 @@ ol {
   height: 0;
 }
 
+/* ---- Cursor ---------------------------------------------------------
+   The class is added by the Cursor island itself, never in the markup:
+   if the island never mounts — touch, reduced motion, JS unavailable —
+   the real pointer must stay exactly where it was. Hiding it from the
+   stylesheet would leave those visitors with no cursor at all.        */
+.has-custom-cursor,
+.has-custom-cursor * {
+  cursor: none;
+}
+
 /* ---- Selection ------------------------------------------------------ */
 ::selection {
   background: var(--selection-bg);

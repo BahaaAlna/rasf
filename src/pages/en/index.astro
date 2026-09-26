@@ -3,21 +3,28 @@ import { getImage } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header';
 import Hero from '../../components/Hero';
+import Mosaic from '../../components/Mosaic';
 import PlaceholderSection from '../../components/PlaceholderSection.astro';
 import logoSrc from '../../assets/logo-en.png';
-import { getHero, getUI, getSite } from '../../lib/content';
+import dotSrc from '../../assets/dot.png';
+import { getHero, getUI, getSite, getOrigin } from '../../lib/content';
 import { alternatePath } from '../../lib/i18n';
 
 const copy = getHero('en');
 const ui = getUI('en');
 const site = getSite('en');
+const originCopy = getOrigin('en');
 const logo = await getImage({ src: logoSrc, format: 'webp', width: 480 });
+const dot = await getImage({ src: dotSrc, format: 'webp', width: 96 });
 ---
 
 <BaseLayout path="/">
   <Header
+    client:idle
     slot="header"
     logo={{ src: logo.src, width: logo.attributes.width, height: logo.attributes.height }}
+    locale="en"
+    dot={{ src: dot.src, width: dot.attributes.width, height: dot.attributes.height }}
     siteName={site.name}
     nav={ui.nav}
     switchHref={alternatePath(Astro.url, 'ar')}
@@ -34,6 +41,8 @@ const logo = await getImage({ src: logoSrc, format: 'webp', width: 480 });
     actions={ui.actions}
     listSeparator=", "
   />
+
+  <Mosaic client:visible src={logo.src} locale="en" copy={originCopy} />
 
   <PlaceholderSection id="work" title={ui.nav.work} />
   <PlaceholderSection id="services" title={ui.nav.services} />

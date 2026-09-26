@@ -1,6 +1,7 @@
 ---
 import { ClientRouter } from 'astro:transitions';
 import SmoothScroll from '../components/SmoothScroll';
+import Cursor from '../components/Cursor';
 import ScrollBar from '../components/ScrollBar';
 import { getLocale, dirFor, localizePath, locales, type Locale } from '../lib/i18n';
 import { getSite } from '../lib/content';
@@ -74,6 +75,7 @@ const ogImage = new URL('/og-default.png', Astro.site ?? content.url);
     </a>
     <SmoothScroll client:idle />
     <ScrollBar client:idle />
+    <Cursor client:idle />
     <slot name="header" />
     <main id="main">
       <slot />
