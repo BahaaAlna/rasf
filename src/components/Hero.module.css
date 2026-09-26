@@ -2,7 +2,7 @@
   min-height: 100svh;
   display: grid;
   /* Message and motif share the frame, so neither half sits dead. */
-  grid-template-columns: minmax(0, 1fr) minmax(15rem, 24rem);
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 32rem);
   align-items: center;
   gap: var(--space-2xl);
   padding-inline: var(--gutter);

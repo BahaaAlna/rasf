@@ -15,14 +15,14 @@ interface Cell {
   row of three cards. One block takes the accent, tying it to the logo dot.
 */
 const CELLS: Cell[] = [
-  { span: 6, height: 1.1, fill: 'color-mix(in srgb, var(--ink) 4%, transparent)' },
-  { span: 4, height: 3, fill: 'color-mix(in srgb, var(--ink) 7%, transparent)' },
-  { span: 2, height: 3, fill: 'var(--accent)', accent: true },
-  { span: 6, height: 0.45, fill: 'color-mix(in srgb, var(--ink) 4%, transparent)' },
-  { span: 5, height: 0.45, fill: 'color-mix(in srgb, var(--ink) 4%, transparent)' },
-  { span: 2, height: 2.4, fill: 'color-mix(in srgb, var(--ink) 5%, transparent)' },
-  { span: 2, height: 2.4, fill: 'color-mix(in srgb, var(--ink) 5%, transparent)' },
-  { span: 2, height: 2.4, fill: 'color-mix(in srgb, var(--ink) 5%, transparent)' },
+  { span: 6, height: 2.2, fill: 'color-mix(in srgb, var(--ink) 4%, transparent)' },
+  { span: 4, height: 6, fill: 'color-mix(in srgb, var(--ink) 7%, transparent)' },
+  { span: 2, height: 6, fill: 'var(--accent)', accent: true },
+  { span: 6, height: 0.9, fill: 'color-mix(in srgb, var(--ink) 4%, transparent)' },
+  { span: 5, height: 0.9, fill: 'color-mix(in srgb, var(--ink) 4%, transparent)' },
+  { span: 2, height: 4.8, fill: 'color-mix(in srgb, var(--ink) 5%, transparent)' },
+  { span: 2, height: 4.8, fill: 'color-mix(in srgb, var(--ink) 5%, transparent)' },
+  { span: 2, height: 4.8, fill: 'color-mix(in srgb, var(--ink) 5%, transparent)' },
 ];
 
 /** Decorative. Static React — no client directive, so it ships no JS. */

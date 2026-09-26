@@ -5,30 +5,44 @@
   bars read as a skeleton loader, i.e. as a page that failed to load.
   Plays once on load, never loops: a permanent loop reads as "stuck".
 
+  The fill lives on a pseudo-element rather than the block itself. An
+  animation with fill-mode:both keeps ownership of the properties it
+  animates, so a background animated directly could never be overridden
+  on hover. Both animations use fill-mode:backwards for the same reason:
+  once they finish, normal styles — and transitions — take over.
+
   Pure CSS. This component ships no JavaScript.
 */
 
 .motif {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: clamp(0.3rem, 0.7vw, 0.5rem);
+  gap: clamp(0.4rem, 0.9vw, 0.7rem);
   width: 100%;
-  max-width: 26rem;
-  /* Sits behind the message, never competes with it. */
-  opacity: 0.9;
+  max-width: 32rem;
 }
 
 .cell {
+  position: relative;
   border: 1px solid color-mix(in srgb, var(--ink) 28%, transparent);
-  border-radius: 2px;
-  opacity: 0;
-  animation:
-    draw var(--dur-reveal) var(--ease-out-expo) var(--delay) both,
-    fill var(--dur-reveal) var(--ease-out-power3) calc(var(--delay) + 0.75s) both;
+  border-radius: 3px;
+  opacity: 1;
+  animation: draw var(--dur-reveal) var(--ease-out-expo) var(--delay) backwards;
+  transition:
+    border-color var(--dur-base) var(--ease-out-expo),
+    opacity var(--dur-base) var(--ease-out-power4),
+    transform var(--dur-base) var(--ease-out-expo);
 }
 
-.accent {
-  border-color: var(--accent);
+.cell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--cell-fill);
+  opacity: 1;
+  animation: fill var(--dur-reveal) var(--ease-out-power3)
+    calc(var(--delay) + 0.75s) backwards;
+  transition: background var(--dur-base) var(--ease-out-expo);
 }
 
 @keyframes draw {
@@ -36,23 +50,53 @@
     opacity: 0;
     transform: translateY(0.75rem);
   }
-  to {
-    opacity: 1;
-    transform: none;
-  }
 }
 
 @keyframes fill {
-  to {
-    background: var(--cell-fill);
+  from {
+    opacity: 0;
   }
+}
+
+/* ---- Pointer response ------------------------------------------------
+   The hovered block takes the accent; its neighbours recede. :has lets
+   the whole plan react to one block without any JavaScript.           */
+.cell:hover {
+  border-color: var(--accent);
+  transform: scale(1.04);
+  z-index: 1;
+}
+
+.cell:hover::before {
+  background: var(--accent);
+}
+
+.motif:has(.cell:hover) .cell:not(:hover) {
+  opacity: 0.45;
+}
+
+/* The accent block inverts instead, so it still registers as a change. */
+.accent {
+  border-color: var(--accent);
+}
+
+.accent:hover {
+  border-color: var(--ink);
+}
+
+.accent:hover::before {
+  background: var(--ink);
 }
 
 /* Nothing moves; the finished layout is simply there. */
 @media (prefers-reduced-motion: reduce) {
-  .cell {
+  .cell,
+  .cell::before {
     animation: none;
-    opacity: 1;
-    background: var(--cell-fill);
+    transition: none;
+  }
+
+  .cell:hover {
+    transform: none;
   }
 }
