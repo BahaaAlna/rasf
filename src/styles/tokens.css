@@ -61,6 +61,10 @@
   --space-2xl: 6rem;
   --space-3xl: 10rem;
 
+  /* The header is sticky but stays in flow, so a full-height section
+     has to subtract it or the page runs past the bottom of the screen. */
+  --header-h: clamp(3.75rem, 3rem + 3vw, 4.75rem);
+
   --gutter: clamp(1.25rem, 4vw, 4rem);
   --measure: 62ch;
   --page-max: 90rem;

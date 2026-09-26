@@ -8,6 +8,8 @@ interface Cell {
   /** Fill applied after the outline is drawn. */
   fill: string;
   accent?: boolean;
+  /** Dropped on phones, where it is too thin to read as anything. */
+  wideOnly?: boolean;
 }
 
 /*
@@ -18,8 +20,8 @@ const CELLS: Cell[] = [
   { span: 6, height: 2.2, fill: 'color-mix(in srgb, var(--ink) 4%, transparent)' },
   { span: 4, height: 6, fill: 'color-mix(in srgb, var(--ink) 7%, transparent)' },
   { span: 2, height: 6, fill: 'var(--accent)', accent: true },
-  { span: 6, height: 0.9, fill: 'color-mix(in srgb, var(--ink) 4%, transparent)' },
-  { span: 5, height: 0.9, fill: 'color-mix(in srgb, var(--ink) 4%, transparent)' },
+  { span: 6, height: 0.9, fill: 'color-mix(in srgb, var(--ink) 4%, transparent)', wideOnly: true },
+  { span: 5, height: 0.9, fill: 'color-mix(in srgb, var(--ink) 4%, transparent)', wideOnly: true },
   { span: 2, height: 4.8, fill: 'color-mix(in srgb, var(--ink) 5%, transparent)' },
   { span: 2, height: 4.8, fill: 'color-mix(in srgb, var(--ink) 5%, transparent)' },
   { span: 2, height: 4.8, fill: 'color-mix(in srgb, var(--ink) 5%, transparent)' },
@@ -32,7 +34,13 @@ export default function WireframeMotif() {
       {CELLS.map((cell, i) => (
         <span
           key={i}
-          className={`${styles.cell} ${cell.accent ? styles.accent : ''}`}
+          className={[
+            styles.cell,
+            cell.accent ? styles.accent : '',
+            cell.wideOnly ? styles.wideOnly : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
           style={
             {
               gridColumn: `span ${cell.span}`,

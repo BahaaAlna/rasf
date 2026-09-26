@@ -1,5 +1,7 @@
 .hero {
-  min-height: 100svh;
+  /* Not 100svh: the header sits above this in normal flow, so a full
+     viewport here would push the bottom of the hero off screen. */
+  min-height: calc(100svh - var(--header-h));
   display: grid;
   /* The plan occupies its own column beside the sentence, spanning the
      rows the message needs, so neither half of the frame sits dead. */
@@ -49,20 +51,19 @@
     /* Full screen, with the plan beside the sentence and everything
        below it running the full width, so the type can grow without
        shredding into a narrow column. */
-    --hero-size: clamp(2.2rem, 12vw, 3.4rem);
-    min-height: 100svh;
+    --hero-size: clamp(1.9rem, 9.5vw, 2.8rem);
     grid-template-columns: minmax(0, 1fr) minmax(4.5rem, 7rem);
     grid-template-areas:
       'head motif'
       'support support'
       'actions actions';
-    /* space-between opened ~350px voids between the three blocks, which
-       is worse than the dead space it replaced. Even, deliberate gaps
-       plus larger type fill the screen instead. */
-    align-content: center;
+    /* Top-aligned with fixed gaps: the slack lands at the bottom, where
+       the section ends and it reads as breathing room rather than as a
+       hole under the header. */
+    align-content: start;
     column-gap: var(--space-md);
-    row-gap: var(--space-2xl);
-    padding-block: var(--space-lg);
+    row-gap: var(--space-xl);
+    padding-block: var(--space-lg) var(--space-xl);
   }
 
   .motif {

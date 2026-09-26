@@ -15,6 +15,9 @@
 */
 
 .motif {
+  /* The plan is a picture of a layout, not text, so it keeps the same
+     composition in both languages instead of mirroring under dir=rtl. */
+  direction: ltr;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: clamp(0.4rem, 0.9vw, 0.7rem);
@@ -95,6 +98,18 @@
 
 .accent:hover::before {
   background: var(--ink);
+}
+
+/* Below this width the hairline rows render as sub-pixel mush and the
+   whole plan reads as noise rather than a layout. */
+@media (max-width: 48rem) {
+  .wideOnly {
+    display: none;
+  }
+
+  .motif {
+    gap: 0.45rem;
+  }
 }
 
 /* ---- Touch devices ---------------------------------------------------

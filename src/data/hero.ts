@@ -4,9 +4,7 @@
   The sentence is static except for its FINAL word, which cycles.
   `lead` is everything before that word; `words` are the rotating options.
 
-  TODO: every string here is a placeholder standing in for Bahaa's real
-  copy. Replace `lead` and `words` for both locales — nothing else needs
-  to change.
+  Copy is final, supplied by Bahaa.
 */
 
 import type { Locale } from '../lib/i18n';
@@ -22,13 +20,13 @@ export interface HeroCopy {
 
 export const hero: Record<Locale, HeroCopy> = {
   ar: {
-    lead: 'نبني لأعمالك مواقع',
-    words: ['أسرع', 'أوضح', 'تبيع أكثر'],
+    lead: 'لا شيء عشوائي. كل تفصيل مرصوف في',
+    words: ['موقعك', 'متجرك', 'علامتك', 'منتجك'],
     interval: 2.6,
   },
   en: {
-    lead: 'Websites for your business that',
-    words: ['load faster', 'feel clearer', 'sell more'],
+    lead: 'Nothing random. Every detail laid into your',
+    words: ['website', 'store', 'brand', 'product'],
     interval: 2.6,
   },
 };
