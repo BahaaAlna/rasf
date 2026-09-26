@@ -58,7 +58,6 @@ export default function Hero({
 
   return (
     <section className={styles.hero}>
-      <div className={styles.message}>
       <h1 className={styles.line}>
         {/* Read once, in full, by assistive tech. */}
         <span className="u-visually-hidden">
@@ -88,6 +87,10 @@ export default function Hero({
         </span>
       </h1>
 
+      <div className={styles.motif}>
+        <WireframeMotif />
+      </div>
+
       <p className={`${styles.support} ${styles.fadeUp}`} style={{ '--delay': '0.5s' } as React.CSSProperties}>
         {support}
       </p>
@@ -102,11 +105,6 @@ export default function Hero({
           <MagneticButton href="#contact" className={`${styles.action} ${styles.actionGhost}`}>
             {actions.contact}
           </MagneticButton>
-        </div>
-      </div>
-
-      <div className={styles.motif}>
-        <WireframeMotif />
       </div>
     </section>
   );

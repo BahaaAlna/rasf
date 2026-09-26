@@ -1,14 +1,17 @@
 .hero {
   min-height: 100svh;
   display: grid;
-  /* Message and motif share the frame, so neither half sits dead. */
+  /* The plan occupies its own column beside the sentence, spanning the
+     rows the message needs, so neither half of the frame sits dead. */
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 32rem);
-  align-items: center;
-  /* Without this the single row stretches to the full content box, so
-     the motif's align-self:start snaps to the box top rather than to
-     the first line of the sentence. */
+  grid-template-areas:
+    'head motif'
+    'support motif'
+    'actions motif';
   align-content: center;
-  gap: var(--space-2xl);
+  justify-items: start;
+  column-gap: var(--space-2xl);
+  row-gap: var(--space-xl);
   padding-inline: var(--gutter);
   /* Clears the sticky header without overflowing a single viewport. */
   padding-block: var(--space-2xl) var(--space-xl);
@@ -16,15 +19,11 @@
   margin-inline: auto;
 }
 
-.message {
-  display: grid;
-  gap: var(--space-xl);
-}
-
 .motif {
+  grid-area: motif;
   justify-self: stretch;
-  /* The grid row is as tall as the message column, so starting here puts
-     the plan's top edge level with the first line of the sentence. */
+  /* Level with the first line of the sentence, not with the block's
+     centre. */
   align-self: start;
   display: grid;
   justify-items: center;
@@ -33,8 +32,8 @@
 @media (max-width: 60rem) {
   .hero {
     grid-template-columns: minmax(0, 1fr) minmax(7rem, 13rem);
-    gap: var(--space-lg);
-    min-height: auto;
+    column-gap: var(--space-lg);
+    row-gap: var(--space-2xl);
     padding-block: var(--space-2xl) var(--space-xl);
   }
 
@@ -47,39 +46,40 @@
    which reads as a phone layout rather than a squashed desktop one. */
 @media (max-width: 48rem) {
   .hero {
-    --hero-size: clamp(1.75rem, 5.2vw, 2.3rem);
-    grid-template-columns: minmax(0, 1fr) minmax(5rem, 7.5rem);
-    gap: var(--space-md);
-    /* Sized to the content rather than the screen. Centring a ~470px
-       message inside 100svh left a quarter of the phone blank. */
-    min-height: auto;
-    padding-block: var(--space-xl) var(--space-lg);
-  }
-
-  .message {
-    gap: var(--space-md);
+    /* Full screen, with the plan beside the sentence and everything
+       below it running the full width, so the type can grow without
+       shredding into a narrow column. */
+    --hero-size: clamp(2.2rem, 12vw, 3.4rem);
+    min-height: 100svh;
+    grid-template-columns: minmax(0, 1fr) minmax(4.5rem, 7rem);
+    grid-template-areas:
+      'head motif'
+      'support support'
+      'actions actions';
+    /* space-between opened ~350px voids between the three blocks, which
+       is worse than the dead space it replaced. Even, deliberate gaps
+       plus larger type fill the screen instead. */
+    align-content: center;
+    column-gap: var(--space-md);
+    row-gap: var(--space-2xl);
+    padding-block: var(--space-lg);
   }
 
   .motif {
-    /* Block heights multiply by this, so the plan scales from one
-       number per breakpoint. */
-    --motif-scale: 0.42;
+    --motif-scale: 0.5;
   }
 
   .support {
-    font-size: var(--step-0);
-  }
-
-  .actions {
-    gap: var(--space-xs);
+    font-size: var(--step-1);
   }
 
   .action {
-    padding: var(--space-xs) var(--space-md);
+    padding: var(--space-sm) var(--space-lg);
   }
 }
 
 .line {
+  grid-area: head;
   font-family: var(--font-display);
   font-size: var(--hero-size);
   line-height: var(--leading-tight);
@@ -203,6 +203,7 @@
 }
 
 .support {
+  grid-area: support;
   font-size: var(--step-1);
   line-height: 1.45;
   color: var(--ink-muted);
@@ -216,6 +217,7 @@
 }
 
 .actions {
+  grid-area: actions;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-md);
