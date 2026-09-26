@@ -1,0 +1,79 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import { getLocale, dirFor, localizePath, locales, type Locale } from '../lib/i18n';
+import { getSite } from '../lib/content';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Locale-independent path, e.g. `/work/ecostone`. Drives hreflang. */
+  path?: string;
+}
+
+const locale: Locale = getLocale(Astro.url);
+const dir = dirFor(locale);
+const content = getSite(locale);
+
+const { title, description = content.description, path = Astro.url.pathname } = Astro.props;
+
+const pageTitle = title ? `${title} — ${content.name}` : `${content.name} — ${content.tagline}`;
+const canonical = new URL(localizePath(path, locale), Astro.site ?? content.url);
+const ogImage = new URL('/og-default.png', Astro.site ?? content.url);
+---
+
+<!doctype html>
+<html lang={locale} dir={dir}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    {
+      locales.map((alt) => (
+        <link
+          rel="alternate"
+          hreflang={alt}
+          href={new URL(localizePath(path, alt), Astro.site ?? content.url)}
+        />
+      ))
+    }
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href={new URL(localizePath(path, 'ar'), Astro.site ?? content.url)}
+    />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={locale === 'ar' ? 'ar_SY' : 'en_US'} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=IBM+Plex+Mono:wght@400&family=Lateef:wght@400;600&display=swap"
+    />
+
+    <ClientRouter />
+    <slot name="head" />
+  </head>
+
+  <body>
+    <a class="u-skip" href="#main">
+      {locale === 'ar' ? 'تخطَّ إلى المحتوى' : 'Skip to content'}
+    </a>
+    <slot name="header" />
+    <main id="main">
+      <slot />
+    </main>
+    <slot name="footer" />
+  </body>
+</html>
