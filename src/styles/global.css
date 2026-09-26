@@ -100,6 +100,18 @@ ol {
   padding: 0;
 }
 
+/* ---- Scrollbar ------------------------------------------------------
+   The native bar is hidden only once the custom one is mounted, so a
+   visitor without JavaScript is never left with no scrollbar at all.   */
+.has-custom-scrollbar {
+  scrollbar-width: none;
+}
+
+.has-custom-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
 /* ---- Selection ------------------------------------------------------ */
 ::selection {
   background: var(--selection-bg);

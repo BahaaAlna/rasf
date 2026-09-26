@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import Lenis from 'lenis';
+import { setLenis } from '../lib/lenis';
 
 /**
  * Inertial scrolling, matching the weighted feel of the reference site but
@@ -20,6 +21,8 @@ export default function SmoothScroll() {
       smoothWheel: true,
       touchMultiplier: 1.6,
     });
+
+    setLenis(lenis);
 
     let frame = 0;
     const raf = (time: number) => {
@@ -54,6 +57,7 @@ export default function SmoothScroll() {
       cancelAnimationFrame(frame);
       document.removeEventListener('click', onClick);
       document.removeEventListener('astro:after-swap', onSwap);
+      setLenis(null);
       lenis.destroy();
     };
   }, []);

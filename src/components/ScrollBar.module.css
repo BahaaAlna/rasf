@@ -1,0 +1,48 @@
+.track {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 0.875rem;
+  z-index: 60;
+  /* The track itself is invisible; it only exists to catch the pointer. */
+  background: transparent;
+  touch-action: none;
+}
+
+.thumb {
+  position: absolute;
+  inset-inline-end: 0.3125rem;
+  width: 0.25rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--ink) 28%, transparent);
+  transition:
+    width var(--dur-base) var(--ease-out-expo),
+    background var(--dur-base) var(--ease-out-power4),
+    inset-inline-end var(--dur-base) var(--ease-out-expo);
+}
+
+.track:hover .thumb {
+  width: 0.4375rem;
+  inset-inline-end: 0.234375rem;
+  background: color-mix(in srgb, var(--ink) 48%, transparent);
+}
+
+.isDragging .thumb,
+.track:active .thumb {
+  width: 0.4375rem;
+  inset-inline-end: 0.234375rem;
+  background: var(--accent);
+}
+
+/* The thumb is a pointer affordance; keyboard and wheel already work. */
+@media (hover: none) {
+  .track {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thumb {
+    transition: none;
+  }
+}

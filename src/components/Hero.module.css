@@ -45,9 +45,11 @@
 .word {
   grid-area: 1 / 1;
   white-space: nowrap;
+  /* The slide is long, but the fade is short: a slow fade leaves the
+     outgoing and incoming words legible on top of each other. */
   transition:
     transform var(--dur-reveal) var(--ease-out-expo),
-    opacity var(--dur-base) var(--ease-out-power4);
+    opacity var(--dur-fast) var(--ease-out-power4);
 }
 
 .isCurrent {
