@@ -38,6 +38,7 @@ export default function WireframeMotif() {
               gridColumn: `span ${cell.span}`,
               height: `calc(${cell.height}rem * var(--motif-scale, 1))`,
               '--delay': `${0.35 + i * 0.07}s`,
+              '--index': i,
               '--cell-fill': cell.fill,
             } as React.CSSProperties
           }

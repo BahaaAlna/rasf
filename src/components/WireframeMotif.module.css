@@ -97,10 +97,75 @@
   background: var(--ink);
 }
 
+/* ---- Touch devices ---------------------------------------------------
+   There is no hover on a phone, so the blocks would simply be inert.
+   Instead the accent walks through them, one at a time, on a loop. The
+   stagger is one second per block, which is slow enough to follow and
+   quick enough not to feel stalled.                                    */
+@media (hover: none) {
+  .cell {
+    animation:
+      draw var(--dur-reveal) var(--ease-out-expo) var(--delay) backwards,
+      sweepEdge 9s linear calc(2.2s + var(--index) * 1s) infinite;
+  }
+
+  .cell::before {
+    animation:
+      fill var(--dur-reveal) var(--ease-out-power3)
+        calc(var(--delay) + 0.75s) backwards,
+      sweepFill 9s linear calc(2.2s + var(--index) * 1s) infinite;
+  }
+
+  /* The accent block already carries the colour, so it inverts instead. */
+  .accent::before {
+    animation:
+      fill var(--dur-reveal) var(--ease-out-power3)
+        calc(var(--delay) + 0.75s) backwards,
+      sweepFillInverted 9s linear calc(2.2s + var(--index) * 1s) infinite;
+  }
+}
+
+@keyframes sweepFill {
+  0%,
+  14%,
+  100% {
+    background: var(--cell-fill);
+  }
+  4%,
+  9% {
+    background: var(--accent);
+  }
+}
+
+@keyframes sweepFillInverted {
+  0%,
+  14%,
+  100% {
+    background: var(--accent);
+  }
+  4%,
+  9% {
+    background: var(--ink);
+  }
+}
+
+@keyframes sweepEdge {
+  0%,
+  14%,
+  100% {
+    border-color: color-mix(in srgb, var(--ink) 28%, transparent);
+  }
+  4%,
+  9% {
+    border-color: var(--accent);
+  }
+}
+
 /* Nothing moves; the finished layout is simply there. */
 @media (prefers-reduced-motion: reduce) {
   .cell,
-  .cell::before {
+  .cell::before,
+  .accent::before {
     animation: none;
     transition: none;
   }

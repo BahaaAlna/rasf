@@ -34,13 +34,12 @@
   .hero {
     grid-template-columns: minmax(0, 1fr) minmax(7rem, 13rem);
     gap: var(--space-lg);
-    min-height: 88svh;
-    padding-block: var(--space-xl) var(--space-lg);
+    min-height: auto;
+    padding-block: var(--space-2xl) var(--space-xl);
   }
 
   .motif {
     --motif-scale: 0.62;
-    align-self: center;
   }
 }
 
@@ -51,11 +50,10 @@
     --hero-size: clamp(1.75rem, 5.2vw, 2.3rem);
     grid-template-columns: minmax(0, 1fr) minmax(5rem, 7.5rem);
     gap: var(--space-md);
-    /* A full 100svh left ~250px of dead space above the sentence on a
-       phone. Shorter, and the next section peeks in to invite a scroll. */
-    min-height: 82svh;
-    /* 96px of top padding pushed the hero past the viewport. */
-    padding-block: var(--space-lg) var(--space-md);
+    /* Sized to the content rather than the screen. Centring a ~470px
+       message inside 100svh left a quarter of the phone blank. */
+    min-height: auto;
+    padding-block: var(--space-xl) var(--space-lg);
   }
 
   .message {
@@ -66,8 +64,6 @@
     /* Block heights multiply by this, so the plan scales from one
        number per breakpoint. */
     --motif-scale: 0.42;
-    /* Beside the sentence, not floating above it. */
-    align-self: center;
   }
 
   .support {
