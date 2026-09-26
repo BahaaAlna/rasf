@@ -1,0 +1,58 @@
+/*
+  A page being laid out — the literal meaning of رصف.
+
+  Outlines first, fill second. Outlines read as a blueprint; grey filled
+  bars read as a skeleton loader, i.e. as a page that failed to load.
+  Plays once on load, never loops: a permanent loop reads as "stuck".
+
+  Pure CSS. This component ships no JavaScript.
+*/
+
+.motif {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: clamp(0.3rem, 0.7vw, 0.5rem);
+  width: 100%;
+  max-width: 26rem;
+  /* Sits behind the message, never competes with it. */
+  opacity: 0.9;
+}
+
+.cell {
+  border: 1px solid color-mix(in srgb, var(--ink) 28%, transparent);
+  border-radius: 2px;
+  opacity: 0;
+  animation:
+    draw var(--dur-reveal) var(--ease-out-expo) var(--delay) both,
+    fill var(--dur-reveal) var(--ease-out-power3) calc(var(--delay) + 0.75s) both;
+}
+
+.accent {
+  border-color: var(--accent);
+}
+
+@keyframes draw {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fill {
+  to {
+    background: var(--cell-fill);
+  }
+}
+
+/* Nothing moves; the finished layout is simply there. */
+@media (prefers-reduced-motion: reduce) {
+  .cell {
+    animation: none;
+    opacity: 1;
+    background: var(--cell-fill);
+  }
+}

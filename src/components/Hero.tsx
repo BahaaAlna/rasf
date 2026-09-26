@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import styles from './Hero.module.css';
+import WireframeMotif from './WireframeMotif';
+import MagneticButton from './MagneticButton';
 
 export interface HeroProps {
   /** Static part of the sentence, before the cycling word. */
@@ -52,8 +54,11 @@ export default function Hero({
     return i === prev ? styles.isPrev : styles.isNext;
   };
 
+  const leadWords = lead.split(' ').filter(Boolean);
+
   return (
     <section className={styles.hero}>
+      <div className={styles.message}>
       <h1 className={styles.line}>
         {/* Read once, in full, by assistive tech. */}
         <span className="u-visually-hidden">
@@ -62,7 +67,16 @@ export default function Hero({
         {/* The animated version, hidden from the accessibility tree so the
             rotating word is not announced over and over. */}
         <span aria-hidden="true">
-          {lead}{' '}
+          {leadWords.map((word, i) => (
+            <span key={`${word}-${i}`} className={styles.leadWord}>
+              <span
+                className={styles.leadWordInner}
+                style={{ '--delay': `${i * 0.05}s` } as React.CSSProperties}
+              >
+                {word}
+              </span>
+            </span>
+          ))}
           <span className={styles.cycler}>
             {words.map((word, i) => (
               <span key={word} className={`${styles.word} ${stateFor(i)}`}>
@@ -74,20 +88,25 @@ export default function Hero({
         </span>
       </h1>
 
-      <p className={styles.support} data-reveal style={{ "--reveal-delay": "0.15s" } as React.CSSProperties}>
+      <p className={`${styles.support} ${styles.fadeUp}`} style={{ '--delay': '0.5s' } as React.CSSProperties}>
         {support}
       </p>
 
-      <div className={styles.actions} data-reveal style={{ "--reveal-delay": "0.25s" } as React.CSSProperties}>
-        <a className={`${styles.action} ${styles.actionPrimary}`} href="#work">
-          {actions.viewWork}
-          <svg className={styles.arrow} width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-            <path d="M2 7h10M8 3l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          </svg>
-        </a>
-        <a className={`${styles.action} ${styles.actionGhost}`} href="#contact">
-          {actions.contact}
-        </a>
+      <div className={`${styles.actions} ${styles.fadeUp}`} style={{ '--delay': '0.65s' } as React.CSSProperties}>
+          <MagneticButton href="#work" className={`${styles.action} ${styles.actionPrimary}`}>
+            {actions.viewWork}
+            <svg className={styles.arrow} width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+              <path d="M2 7h10M8 3l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            </svg>
+          </MagneticButton>
+          <MagneticButton href="#contact" className={`${styles.action} ${styles.actionGhost}`}>
+            {actions.contact}
+          </MagneticButton>
+        </div>
+      </div>
+
+      <div className={styles.motif}>
+        <WireframeMotif />
       </div>
     </section>
   );

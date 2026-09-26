@@ -1,13 +1,39 @@
 .hero {
   min-height: 100svh;
   display: grid;
-  align-content: center;
-  gap: var(--space-xl);
+  /* Message and motif share the frame, so neither half sits dead. */
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 24rem);
+  align-items: center;
+  gap: var(--space-2xl);
   padding-inline: var(--gutter);
   /* Clears the sticky header without overflowing a single viewport. */
   padding-block: var(--space-2xl) var(--space-xl);
   max-width: var(--page-max);
   margin-inline: auto;
+}
+
+.message {
+  display: grid;
+  gap: var(--space-xl);
+}
+
+.motif {
+  justify-self: stretch;
+  display: grid;
+  justify-items: center;
+}
+
+@media (max-width: 60rem) {
+  .hero {
+    grid-template-columns: 1fr;
+    align-content: center;
+    gap: var(--space-xl);
+  }
+
+  .motif {
+    justify-self: start;
+    width: min(100%, 20rem);
+  }
 }
 
 .line {
@@ -37,9 +63,10 @@
   display: inline-grid;
   vertical-align: top;
   overflow: hidden;
-  /* Room for tashkeel above and descenders below, inside the clip. */
-  padding-block: 0.18em 0.28em;
-  margin-block: -0.18em -0.28em;
+  /* Just enough room for tashkeel and descenders. Any more and the
+     outgoing word shows a sliver above the line during the swap. */
+  padding-block: 0.08em 0.14em;
+  margin-block: -0.08em -0.14em;
 }
 
 .word {
@@ -59,18 +86,77 @@
 
 /* Waiting below the mask. */
 .isNext {
-  transform: translateY(110%);
+  transform: translateY(160%);
   opacity: 0;
 }
 
 /* Leaving through the top. */
 .isPrev {
-  transform: translateY(-110%);
+  transform: translateY(-160%);
   opacity: 0;
 }
 
 .dot {
   color: var(--accent);
+}
+
+/* Each word rises out of its own gutter. Word-level only: splitting
+   Arabic per character destroys the cursive joining forms. */
+.leadWord {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-block: 0.18em 0.28em;
+  margin-block: -0.18em -0.28em;
+  /* A trailing space inside an overflow:hidden inline-block collapses,
+     so the gap between words has to be a margin. */
+  margin-inline-end: 0.25em;
+}
+
+.leadWordInner {
+  display: inline-block;
+  animation: riseIn var(--dur-reveal) var(--ease-out-expo) var(--delay) both;
+}
+
+@keyframes riseIn {
+  from {
+    transform: translateY(160%);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leadWordInner {
+    animation: none;
+  }
+}
+
+/* Hero content animates on load, never on scroll: the observer's bottom
+   margin can leave above-the-fold buttons permanently invisible on short
+   viewports. */
+.fadeUp {
+  animation: riseUp var(--dur-reveal) var(--ease-out-expo) var(--delay) both;
+}
+
+@keyframes riseUp {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fadeUp {
+    animation: none;
+  }
 }
 
 .support {
@@ -95,15 +181,38 @@
 .action {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-xs);
+  white-space: nowrap;
   font-size: var(--step-0);
   padding: var(--space-sm) var(--space-lg);
   border-radius: var(--radius-pill);
   border: 1px solid var(--ink);
   transition:
     background var(--dur-base) var(--ease-out-power4),
-    color var(--dur-base) var(--ease-out-power4),
-    transform var(--dur-base) var(--ease-out-expo);
+    color var(--dur-base) var(--ease-out-power4);
+}
+
+/* The wrapper carries the magnetic offset; the button keeps its own
+   hover styling. Separating them stops the two transforms fighting. */
+.magnet {
+  display: inline-block;
+  transition: transform var(--dur-slow) var(--ease-out-expo);
+}
+
+.magnetLabel {
+  /* Holds the label and its arrow; without flex they flow as text and
+     the arrow wraps onto its own line. */
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  white-space: nowrap;
+  transition: transform var(--dur-slow) var(--ease-out-expo);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .magnet,
+  .magnetLabel {
+    transition: none;
+  }
 }
 
 .actionPrimary {
@@ -115,7 +224,6 @@
 .actionPrimary:focus-visible {
   background: var(--accent);
   border-color: var(--accent);
-  transform: translateY(-2px);
 }
 
 .actionGhost {
@@ -126,7 +234,6 @@
 .actionGhost:focus-visible {
   background: var(--ink);
   color: var(--paper);
-  transform: translateY(-2px);
 }
 
 /* Arrow points along the reading direction. */
