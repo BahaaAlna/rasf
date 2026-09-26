@@ -24,3 +24,11 @@ export function getSite(locale: Locale) {
 }
 
 export type SiteContent = ReturnType<typeof getSite>;
+
+import { hero } from '../data/hero';
+
+export function getHero(locale: Locale) {
+  return hero[locale];
+}
+
+export type HeroContent = ReturnType<typeof getHero>;

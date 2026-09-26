@@ -1,7 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero';
+import { getHero } from '../lib/content';
+
+const copy = getHero('ar');
 ---
 
 <BaseLayout path="/">
-  <p class="u-wrap u-mono">Foundation in place — sections land in a later step.</p>
+  <Hero client:load lead={copy.lead} words={copy.words} interval={copy.interval} listSeparator="، " />
 </BaseLayout>

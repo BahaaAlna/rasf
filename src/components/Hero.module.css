@@ -1,0 +1,75 @@
+.hero {
+  min-height: 100svh;
+  display: grid;
+  align-content: center;
+  padding-inline: var(--gutter);
+  padding-block: var(--space-2xl);
+  max-width: var(--page-max);
+  margin-inline: auto;
+}
+
+.line {
+  font-family: var(--font-display);
+  font-size: var(--step-5);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin: 0;
+  text-wrap: balance;
+}
+
+:global([dir='rtl']) .line {
+  /* Lateef sets far smaller than Bricolage at the same font-size, so the
+     display scale has to be applied here too, not just to body text. */
+  font-size: calc(var(--step-5) * var(--ar-scale));
+  letter-spacing: 0;
+  line-height: calc(var(--leading-tight) * var(--ar-leading));
+}
+
+/*
+  All candidate words occupy the same grid cell, so the box is always as
+  wide as the widest word and swapping never shifts the layout.
+*/
+.cycler {
+  display: inline-grid;
+  vertical-align: top;
+  overflow: hidden;
+  /* Room for tashkeel above and descenders below, inside the clip. */
+  padding-block: 0.18em 0.28em;
+  margin-block: -0.18em -0.28em;
+}
+
+.word {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+  transition:
+    transform var(--dur-reveal) var(--ease-out-expo),
+    opacity var(--dur-base) var(--ease-out-power4);
+}
+
+.isCurrent {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Waiting below the mask. */
+.isNext {
+  transform: translateY(110%);
+  opacity: 0;
+}
+
+/* Leaving through the top. */
+.isPrev {
+  transform: translateY(-110%);
+  opacity: 0;
+}
+
+.dot {
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .word {
+    transition: none;
+  }
+}

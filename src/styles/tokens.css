@@ -1,18 +1,22 @@
 /*
-  Design tokens — Direction A, "Paper & Ink".
+  Design tokens — "Paper & Ink", palette sampled from the Rasf logotype.
   Everything visual is defined here. To try another direction, swap the
   values in :root; no component needs to change.
 */
 
 :root {
   /* ---- Colour ------------------------------------------------------- */
-  --paper: #f7f5f0;        /* page ground — warm, never pure white */
-  --paper-sunk: #efece5;   /* recessed panels */
-  --ink: #141414;          /* text — near-black, never pure black */
-  --ink-muted: #8a857c;    /* metadata, captions */
-  --accent: #b4552f;       /* terracotta — links, active state, one accent only */
-  --accent-quiet: #b4552f26;
-  --rule: #1414141f;       /* hairline dividers */
+  --paper: #f5f2eb;        /* page ground — sampled from the logo artwork */
+  --paper-sunk: #eeeae1;   /* recessed panels */
+  --ink: #18181c;          /* text — sampled from the logotype */
+  --ink-muted: #86837b;    /* metadata, captions */
+  --accent: #183fc0;       /* the dot — links, active state, one accent only */
+  --accent-quiet: #183fc026;
+  --rule: #18181c1f;       /* hairline dividers */
+
+  /* Highlighted text — deliberately not the browser default blue. */
+  --selection-bg: #183fc0;
+  --selection-fg: #f5f2eb;
 
   --bg: var(--paper);
   --fg: var(--ink);
