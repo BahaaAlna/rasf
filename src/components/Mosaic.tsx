@@ -23,10 +23,24 @@ interface Props {
 const ROWS = 42;
 /** Share of the scroll spent staggering the laying order. */
 const SPREAD = 0.5;
-/** Dead scroll before the first stone moves, so the word arrives late. */
-const LEAD = 0.24;
+/**
+ * Share of the pin by which the last stone has landed.
+ *
+ * The section is pinned for exactly as long as it takes to lay the word
+ * and no longer: no dead scroll in front of the first stone, only a
+ * short hold behind the last.
+ */
+const SETTLED = 0.8;
+/**
+ * Share of the stage's exit spent lifting the stones again.
+ *
+ * Under 1 so the word is back off the page while there is still some of
+ * the stage left to see, rather than only finishing once it is out of
+ * frame anyway.
+ */
+const UNDO = 0.7;
 /** How hard the scrubbed scroll progress is smoothed. */
-const SCROLL_EASE = 0.1;
+const SCROLL_EASE = 0.14;
 /** How hard each stone chases its target. Lower drifts more. */
 const TILE_EASE = 0.12;
 /** How solid a stone is the moment it crosses the edge. */
@@ -66,7 +80,16 @@ function noise(n: number) {
   return x - Math.floor(x);
 }
 
-/** A resting place beyond one of the four edges, so it flies in. */
+/**
+ * A resting place beyond one of the four edges, so it flies in.
+ *
+ * Off the stage entirely, which is what makes the arrival an arrival: a
+ * stone is not on the page at all until it has crossed an edge, and the
+ * stage's clip does the rest. Resting them across the screen instead
+ * and raising their opacity was tried, and is a different thing — dust
+ * that was always lying there, coming up out of the paper. These come
+ * in from outside.
+ */
 function launch(seed: number, width: number, height: number) {
   const side = Math.floor(noise(seed + 13) * 4) % 4;
   const along = noise(seed + 29);
@@ -330,11 +353,19 @@ export default function Mosaic({ src, locale, copy }: Props) {
         next.push(place(dotCol + cell.dc, foot + cell.dr, 7919 + cell.dc * 31 + cell.dr, ink));
       }
 
+      /*
+        Seeded at the laid-ness the scroll has already reached, not at
+        the scatter. A resize re-measures everything, and every phone
+        fires one on nearly every scroll as the URL bar slides: seeding
+        from the scatter blew the finished word apart and re-laid it
+        each time.
+      */
       stones = next;
       for (const s of stones) {
-        s.cx = still ? s.hx : s.sx;
-        s.cy = still ? s.hy : s.sy;
-        s.alpha = still ? 1 : RESTING;
+        const laid = still ? 1 : easeOut(clamp01((progress - s.turn * SPREAD) / (1 - SPREAD)));
+        s.cx = s.sx + (s.hx - s.sx) * laid;
+        s.cy = s.sy + (s.hy - s.sy) * laid;
+        s.alpha = RESTING + (1 - RESTING) * laid;
       }
       return true;
     };
@@ -354,9 +385,23 @@ export default function Mosaic({ src, locale, copy }: Props) {
 
     const step = () => {
       const rect = host.getBoundingClientRect();
-      const travel = rect.height - window.innerHeight;
-      const scrolled = travel > 0 ? clamp01(-rect.top / travel) : 1;
-      const raw = clamp01((scrolled - LEAD) / (1 - LEAD));
+      const pin = rect.height - window.innerHeight;
+      const past = -rect.top;
+
+      /*
+        Two stretches of scroll, not one.
+
+        The pin lays the word. Once the pin is spent the stage comes
+        unstuck and rides up out of frame with the page — and it is that
+        ride, not a second pin, which lifts the stones again. So the
+        reader is never held in place to watch the word come apart: they
+        are going down the page the whole time, the name is travelling
+        up and away as they go, and it is taking itself up on the way.
+      */
+
+      const lay = pin > 0 ? clamp01(past / (pin * SETTLED)) : 1;
+      const exit = pin > 0 ? clamp01((past - pin) / (window.innerHeight * UNDO)) : 0;
+      const raw = lay * (1 - exit);
       progress += (raw - progress) * SCROLL_EASE;
 
       focus += ((active.current === null ? 0 : 1) - focus) * 0.16;
@@ -449,8 +494,14 @@ export default function Mosaic({ src, locale, copy }: Props) {
       ([entry]) => {
         live = entry.isIntersecting && !still;
         if (live && !frame) frame = requestAnimationFrame(step);
+        // The canvas is fixed to the viewport, so its last frame does
+        // not leave with the section: stopping the loop without this
+        // left a still field of stones lying over every section below.
+        if (!live) ctx.clearRect(0, 0, cv.width, cv.height);
       },
-      { rootMargin: '20% 0px' },
+      // Enough either side to cover the fade above, and no more — the
+      // field has nothing to say while the section is off screen.
+      { rootMargin: '50% 0px' },
     );
 
     const start = () => {
@@ -493,6 +544,8 @@ export default function Mosaic({ src, locale, copy }: Props) {
   return (
     <section ref={section} className={styles.section} aria-labelledby="origin-q">
       <div className={styles.stage}>
+        {/* Inside the stage, and clipped by it, so a stone that has not
+            crossed an edge yet is simply not on the page. */}
         <canvas ref={canvas} className={styles.canvas} aria-hidden="true" />
 
         {/* The paved wordmark carries the rest of the question, but it

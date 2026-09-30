@@ -30,61 +30,119 @@
   pointer-events: none;
   /* Never mirrored: the cursor belongs to the screen, not the text. */
   direction: ltr;
+  /*
+    Hidden until script has actually seen a pointer. Without this the
+    markup renders regardless — and on a touch screen, where the script
+    bails out before it can hide anything, that left a dot and a ring
+    pinned to the top-left corner of every page.
+  */
+  opacity: 0;
 }
 
+/*
+  Nothing to stand in for. Touch and pen get no overlay at all, and
+  neither does anyone who has asked for less motion — for them the real
+  cursor is never hidden, so a second one would only be a duplicate.
+*/
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .root {
+    display: none;
+  }
+}
+
+/* Position carriers. Script owns their transform; nothing else may. */
 .stone,
 .bay {
   position: absolute;
   top: 0;
   left: 0;
+  will-change: transform;
+}
+
+/*
+  The discs. Sized by transform rather than by width, so opening and
+  closing them costs the compositor a matrix and the main thread
+  nothing — animating width and height instead put a layout pass in
+  every frame of every hover, which is most of what made this feel
+  heavy.
+*/
+.dot,
+.ring {
+  display: block;
   border-radius: var(--radius-pill);
   will-change: transform;
 }
 
-.stone {
-  width: 8px;
-  height: 8px;
+/*
+  Small. The dot is an aiming point, not an object in its own right —
+  at 8px it read as a blob sliding over the page, and no amount of
+  easing makes a blob look precise.
+*/
+.dot {
+  width: 5px;
+  height: 5px;
   background: var(--ink);
+  transform: translate(-50%, -50%) scale(1);
   transition:
-    width var(--dur-fast) var(--ease-out-expo),
-    height var(--dur-fast) var(--ease-out-expo),
+    transform var(--dur-fast) var(--ease-out-expo),
     background var(--dur-fast) var(--ease-out-expo);
 }
 
-.bay {
-  width: 32px;
-  height: 32px;
-  border: 1px solid color-mix(in srgb, var(--ink) 38%, transparent);
+/*
+  Drawn at its widest and held small, rather than the other way round:
+  scaling a 26px ring up to 44 would drag its border up with it and the
+  outline would fatten as it opened. This way the hairline thins at
+  rest and firms to a full pixel as the bay receives the stone.
+
+  Tighter than it was, and darker. A wide, faint ring reads as a halo —
+  something the page is emitting — where a small, definite one reads as
+  a drawn object that belongs to the pointer.
+*/
+.ring {
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid color-mix(in srgb, var(--ink) 52%, transparent);
+  background: transparent;
+  transform: translate(-50%, -50%) scale(0.59);
   transition:
-    width var(--dur-base) var(--ease-out-expo),
-    height var(--dur-base) var(--ease-out-expo),
+    transform var(--dur-base) var(--ease-out-expo),
+    background var(--dur-base) var(--ease-out-expo),
     border-color var(--dur-base) var(--ease-out-expo);
 }
 
 /* Over dark ground the two simply change sides. */
-.onDark .stone {
+.onDark .dot {
   background: var(--paper);
 }
 
-.onDark .bay {
-  border-color: color-mix(in srgb, var(--paper) 55%, transparent);
+.onDark .ring {
+  border-color: color-mix(in srgb, var(--paper) 62%, transparent);
 }
 
-/* Over something clickable the bay opens to receive the stone. */
-.active .bay {
-  width: 54px;
-  height: 54px;
+/*
+  Over something clickable the bay opens to receive the stone — and
+  fills, faintly. An outline that only changes size is the one move
+  every cursor of this kind makes; carrying a wash of the accent with
+  it is what makes the open state look decided rather than merely
+  bigger.
+*/
+.active .ring {
+  transform: translate(-50%, -50%) scale(1);
   border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
-.active .stone {
-  width: 6px;
-  height: 6px;
+.active .dot {
+  transform: translate(-50%, -50%) scale(0.6);
   background: var(--accent);
 }
 
-/* Pressed: the bay closes onto the stone. */
-.down .bay {
-  width: 24px;
-  height: 24px;
+/* Pressed: the bay closes onto the stone. Last, so it wins over the
+   open state when something clickable is being pressed. */
+.down .ring {
+  transform: translate(-50%, -50%) scale(0.75);
+}
+
+.down .dot {
+  transform: translate(-50%, -50%) scale(1.2);
 }

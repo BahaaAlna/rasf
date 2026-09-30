@@ -42,7 +42,7 @@ const dot = await getImage({ src: dotSrc, format: 'webp', width: 96 });
     listSeparator=", "
   />
 
-  <Mosaic client:visible src={logo.src} locale="en" copy={originCopy} />
+  <Mosaic client:idle src={logo.src} locale="en" copy={originCopy} />
 
   <PlaceholderSection id="work" title={ui.nav.work} />
   <PlaceholderSection id="services" title={ui.nav.services} />

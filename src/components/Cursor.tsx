@@ -2,11 +2,13 @@ import { useEffect, useRef } from 'react';
 import styles from './Cursor.module.css';
 
 /** How hard the bay chases the stone. Lower trails further. */
-const EASE = 0.16;
+const EASE = 0.28;
 /** Milliseconds between ground/target checks. Per frame is wasteful. */
 const PROBE_MS = 90;
 /** Below this relative luminance the ground counts as dark. */
 const DARK = 0.42;
+/** Bay travel under this, in pixels, counts as arrived. */
+const SETTLED = 0.1;
 
 /** Things whose own cursor is worth keeping. */
 const TEXTUAL = 'input, textarea, select, [contenteditable=""], [contenteditable="true"]';
@@ -58,10 +60,10 @@ function groundLuminance(el: Element | null) {
  * Rasf's pointer: a stone locked to the cursor and the bay it is laid
  * into, trailing behind.
  *
- * Mount once, in the layout. Renders nothing on touch screens or under
- * reduced motion, and the real cursor is only hidden when this one is
- * actually running — hiding it and then failing to draw would leave the
- * page unusable.
+ * Mount once, in the layout. Draws nothing on touch screens or under
+ * reduced motion — the overlay is hidden in the stylesheet until script
+ * confirms it is running, so a pointer that never arrives cannot leave
+ * a stray dot parked in the corner of the screen.
  */
 export default function Cursor() {
   const root = useRef<HTMLDivElement>(null);
@@ -80,58 +82,102 @@ export default function Cursor() {
     if (!host || !dot || !ring) return;
 
     document.documentElement.classList.add('has-custom-cursor');
-    host.style.opacity = '0';
 
     const to = { x: innerWidth / 2, y: innerHeight / 2 };
     const at = { ...to };
     let frame = 0;
     let probed = 0;
     let seen = false;
+    /** The ground reading is out of date, so the loop may not stop. */
+    let stale = true;
+    /*
+      What was last under the pointer. The luminance walk is up to
+      sixteen getComputedStyle calls, each of which forces a style
+      recalculation — far too much to repeat eleven times a second while
+      the pointer sits inside the same element.
+    */
+    let under: Element | null = null;
 
+    const read = () => {
+      const now = document.elementFromPoint(to.x, to.y);
+      if (now === under) return;
+      under = now;
+      // A text field keeps its own I-beam; ours would only get in the way.
+      const textual = !!now?.closest(TEXTUAL);
+      host.style.opacity = textual ? '0' : '1';
+      document.documentElement.classList.toggle('has-custom-cursor', !textual);
+      host.classList.toggle(styles.active, !!now?.closest(CLICKABLE));
+      host.classList.toggle(styles.onDark, groundLuminance(now) < DARK);
+    };
+
+    /*
+      Only the bay is animated here. The stone is written straight from
+      the pointer event instead, because a frame loop can only ever draw
+      where the pointer was when the frame began — and with the real
+      cursor hidden, that one frame of arrears is the whole of the lag.
+    */
     const step = (now: number) => {
-      // The stone is exact; only the bay is allowed to lag.
-      dot.style.transform = `translate(${to.x}px, ${to.y}px) translate(-50%, -50%)`;
-      at.x += (to.x - at.x) * EASE;
-      at.y += (to.y - at.y) * EASE;
-      ring.style.transform = `translate(${at.x.toFixed(2)}px, ${at.y.toFixed(2)}px) translate(-50%, -50%)`;
+      const dx = to.x - at.x;
+      const dy = to.y - at.y;
+      at.x += dx * EASE;
+      at.y += dy * EASE;
+      ring.style.transform = `translate(${at.x.toFixed(2)}px, ${at.y.toFixed(2)}px)`;
 
-      if (now - probed > PROBE_MS) {
+      if (stale && now - probed > PROBE_MS) {
         probed = now;
-        const under = document.elementFromPoint(to.x, to.y);
-        // A text field keeps its own I-beam; ours would only get in the way.
-        const textual = !!under?.closest(TEXTUAL);
-        host.style.opacity = textual ? '0' : '1';
-        document.documentElement.classList.toggle('has-custom-cursor', !textual);
-        host.classList.toggle(styles.active, !!under?.closest(CLICKABLE));
-        host.classList.toggle(styles.onDark, groundLuminance(under) < DARK);
+        stale = false;
+        read();
       }
 
-      frame = requestAnimationFrame(step);
+      // A still pointer over ground already read has nothing left to
+      // draw, so the loop stands down until something wakes it.
+      const arrived = Math.abs(dx) < SETTLED && Math.abs(dy) < SETTLED;
+      if (arrived) {
+        at.x = to.x;
+        at.y = to.y;
+      }
+      frame = arrived && !stale ? 0 : requestAnimationFrame(step);
+    };
+
+    const wake = () => {
+      stale = true;
+      if (!frame) frame = requestAnimationFrame(step);
     };
 
     const onMove = (event: PointerEvent) => {
       to.x = event.clientX;
       to.y = event.clientY;
+      dot.style.transform = `translate(${to.x}px, ${to.y}px)`;
       if (!seen) {
         // Jump the bay to the first sighting instead of flying it in
         // from the middle of the screen.
         seen = true;
         at.x = to.x;
         at.y = to.y;
+        ring.style.transform = `translate(${to.x}px, ${to.y}px)`;
         host.style.opacity = '1';
       }
+      wake();
+    };
+
+    // Scrolling changes the ground without moving the pointer, so the
+    // reading has to be retaken even though nothing was touched.
+    const onScroll = () => {
+      under = null;
+      wake();
     };
 
     const onLeave = () => {
       host.style.opacity = '0';
     };
     const onEnter = () => {
-      host.style.opacity = '1';
+      if (seen) host.style.opacity = '1';
     };
     const onDown = () => host.classList.add(styles.down);
     const onUp = () => host.classList.remove(styles.down);
 
     window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
     document.addEventListener('pointerleave', onLeave);
     document.addEventListener('pointerenter', onEnter);
     window.addEventListener('pointerdown', onDown, { passive: true });
@@ -141,6 +187,7 @@ export default function Cursor() {
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('scroll', onScroll);
       document.removeEventListener('pointerleave', onLeave);
       document.removeEventListener('pointerenter', onEnter);
       window.removeEventListener('pointerdown', onDown);
@@ -149,10 +196,21 @@ export default function Cursor() {
     };
   }, []);
 
+  /*
+    Two layers each. The outer span carries the position, rewritten from
+    script every frame; the inner disc carries the size, animated in CSS.
+    They cannot share one transform — script would trample the
+    transition on it — and the size has to be a transform rather than a
+    width, or every frame of every hover costs a layout pass.
+  */
   return (
     <div ref={root} className={styles.root} aria-hidden="true">
-      <span ref={bay} className={styles.bay} />
-      <span ref={stone} className={styles.stone} />
+      <span ref={bay} className={styles.bay}>
+        <i className={styles.ring} />
+      </span>
+      <span ref={stone} className={styles.stone}>
+        <i className={styles.dot} />
+      </span>
     </div>
   );
 }

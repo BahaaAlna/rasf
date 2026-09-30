@@ -14,8 +14,14 @@
   rather than blinking into being at the border of a box.
 */
 
+/*
+  One screen of stage plus one of pin. The pin is spent laying the word
+  and nothing else; past it the stage comes unstuck and the finished
+  name travels up and out of frame at reading speed, like any other
+  section, instead of holding the reader in place.
+*/
 .section {
-  height: 320svh;
+  height: 200svh;
   position: relative;
   border-block-start: 1px solid var(--rule);
 }
@@ -27,12 +33,20 @@
   overflow: hidden;
 }
 
+/*
+  The stage's own box, and clipped by it. That clip is the whole point:
+  the stones rest beyond its edges and are simply not drawn until they
+  have crossed one, so they arrive out of nothing rather than fading up
+  out of the page. A canvas fixed to the screen instead had no edge to
+  cross and nowhere to hide, which left fading as the only way in.
+*/
 .canvas {
   position: absolute;
   inset: 0;
   display: block;
   width: 100%;
   height: 100%;
+  pointer-events: none;
 }
 
 /* The first half of the question. The paved word is the second half. */
