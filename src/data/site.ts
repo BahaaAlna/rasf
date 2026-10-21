@@ -16,16 +16,19 @@ export const site = {
     en: 'Rasf',
   } satisfies Localized<string>,
 
-  /** TODO: confirm. Shown in <title> and OG tags. */
+  /**
+   * TODO: confirm. Shown in <title> and OG tags. Rasf is a whole studio,
+   * software first: building comes before design in every line.
+   */
   tagline: {
-    ar: 'استوديو تطوير واجهات أمامية',
-    en: 'Front-end development studio',
+    ar: 'استوديو برمجيات وتصميم',
+    en: 'Software & design studio',
   } satisfies Localized<string>,
 
-  /** TODO: confirm — placeholder description, replace before launch. */
+  /** TODO: confirm — draft description, written to the software-first brief. */
   description: {
-    ar: 'نبني مواقع سريعة وواضحة للأعمال. [نص مؤقت — بانتظار المحتوى النهائي]',
-    en: 'Fast, clear websites for businesses. [Placeholder — awaiting final copy]',
+    ar: 'نبني البرمجيات من الفكرة حتى الإطلاق — مواقع، تطبيقات ويب، ومتاجر — ونصمم الهويات التي تحملها.',
+    en: 'We build software end to end — websites, web apps and online stores — and design the brands they carry.',
   } satisfies Localized<string>,
 
   /** TODO: real contact details. */

@@ -23,7 +23,7 @@ export const ui: Record<Locale, UIStrings> = {
     },
     actions: { viewWork: 'شاهد الأعمال', contact: 'ابدأ مشروعك' },
     switchTo: 'English',
-    heroSupport: 'استوديو تطوير واجهات أمامية. نبني مواقع تُحمّل بسرعة وتعمل على كل شاشة.',
+    heroSupport: 'استوديو برمجيات وتصميم. نبني المواقع وتطبيقات الويب كاملة، من أول فكرة حتى الإطلاق، ونصمم هوياتها.',
   },
   en: {
     nav: {
@@ -34,6 +34,6 @@ export const ui: Record<Locale, UIStrings> = {
     },
     actions: { viewWork: 'View work', contact: 'Start a project' },
     switchTo: 'العربية',
-    heroSupport: 'A front-end development studio. We build sites that load fast and work on every screen.',
+    heroSupport: 'A software and design studio. We build websites and web apps end to end, from the first idea to launch, and design the brands behind them.',
   },
 };

@@ -1,9 +1,8 @@
 /*
   "What is Rasf?" — the section that answers its own name.
 
-  `lead` is only the first half of the question. The second half is the
-  paved wordmark underneath it, which carries the question mark, so the
-  two read as one line: lead + the name + "?".
+  `lead` is the start of the question; the component finishes it with
+  the name and "?", and the paved logotype stands underneath.
 
   Draft copy, written from Bahaa's brief: the Arabic meaning of the word,
   and the precision it stands for. TODO: sign-off.
@@ -19,7 +18,7 @@ export interface OriginColumn {
 }
 
 export interface OriginContent {
-  /** Reads into the paved wordmark: "What is" → "Rasf?" */
+  /** Reads into the name: "What is" → "What is Rasf?" */
   lead: string;
   /** The cards open on hover only, so the page has to say so. */
   hint: string;
@@ -29,7 +28,7 @@ export interface OriginContent {
 export const origin: Record<Locale, OriginContent> = {
   ar: {
     lead: 'ما هو',
-    hint: 'مرِّر فوق الاسم',
+    hint: 'لكلِّ لونٍ معناه',
     columns: [
       {
         n: '٠١',
@@ -50,7 +49,7 @@ export const origin: Record<Locale, OriginContent> = {
   },
   en: {
     lead: 'What is',
-    hint: 'Hover the name',
+    hint: 'Every color has its meaning',
     columns: [
       {
         n: '01',

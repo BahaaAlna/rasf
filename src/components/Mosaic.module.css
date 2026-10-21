@@ -3,10 +3,8 @@
 
   The wordmark is paved from the real logo image: every opaque pixel of
   it becomes a stone, so the Arabic page paves رصف and the English one
-  paves Rasf from the same code, each stone keeping the colour it
-  sampled. The question mark is added the cheap way — the logotype
-  already ends in a dot, and a question mark is a hook above a dot, so
-  the dot stays exactly where it is and only the hook is laid in.
+  paves Rasf from the same code. The logo is laid exactly as drawn, its
+  dot included; the question itself is asked in full by the lead line.
 
   The lead line above and the three columns below are overlays, not
   neighbours: the canvas keeps the whole stage so its edges stay the
@@ -49,7 +47,7 @@
   pointer-events: none;
 }
 
-/* The first half of the question. The paved word is the second half. */
+/* The question, above the name it asks about. */
 .lead {
   position: absolute;
   inset-block-start: clamp(var(--space-lg), 7vh, var(--space-2xl));
@@ -64,27 +62,31 @@
 }
 
 /*
-  One card, not three columns. It belongs to whichever third of the
-  paved word the pointer is over, and it is placed under that third
-  rather than following the cursor — a card that chases the pointer
-  cannot be read while it moves.
+  One card, not three columns. It belongs to whichever letter of the
+  paved word the pointer is over, and it floats after the pointer as if
+  weightless — lagging, overshooting and settling rather than being
+  stuck to it, so it stays readable while it moves.
 
-  Position comes from a transform set in script, so sliding from one
-  third to the next is a single interpolated move.
+  Position comes from a transform the script sets every frame, so only
+  opacity is transitioned here; a transform transition would fight the
+  drift. That transform is in canvas pixels, measured from the left in
+  both languages, so the card is pinned to the physical left: a logical
+  start edge put it on the right under RTL and pushed it off the screen.
 */
 .card {
   position: absolute;
   inset-block-start: 0;
-  inset-inline-start: 0;
+  left: 0;
   width: min(30rem, 78vw);
   padding: var(--space-md) var(--space-lg);
   background: var(--paper);
   border: 1px solid var(--rule);
+  box-shadow: 0 18px 40px -24px rgb(0 0 0 / 0.25);
   pointer-events: none;
   opacity: 0;
-  transition:
-    transform var(--dur-base) var(--ease-out-expo),
-    opacity var(--dur-base) var(--ease-out-expo);
+  transform-origin: 50% 0;
+  will-change: transform;
+  transition: opacity var(--dur-base) var(--ease-out-expo);
 }
 
 .cardOut {
@@ -120,11 +122,16 @@
   line-height: calc(var(--leading-body) * var(--ar-leading));
 }
 
-/* A standing hint, since the cards are only found by hovering. */
+/*
+  A standing hint, since the cards are only found by hovering. Released
+  from the site's paragraph measure, which otherwise narrowed it and
+  pushed it off centre toward the start edge.
+*/
 .hint {
   position: absolute;
   inset-block-end: clamp(var(--space-lg), 6vh, var(--space-2xl));
   inset-inline: 0;
+  max-inline-size: none;
   text-align: center;
   font-family: var(--font-mono);
   font-size: var(--step--1);

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { LOGO_DOT } from '../data/logoDot';
+import { LETTER_SHADES, LOGO_LETTERS, SPECKLE } from '../data/logoLetters';
 import type { OriginContent } from '../data/origin';
 import styles from './Mosaic.module.css';
 
@@ -16,9 +17,8 @@ interface Props {
 
   A fixed column count gives the two languages very different detail:
   the Arabic mark is about 4:1, so 104 columns left it only 26 rows
-  tall, and the 13 of them above the dot could not render a legible
-  question mark — 22 stones for the whole hook. Fixing the ROWS instead
-  gives both wordmarks the same vertical resolution.
+  tall. Fixing the ROWS instead gives both wordmarks the same vertical
+  resolution.
 */
 const ROWS = 42;
 /** Share of the scroll spent staggering the laying order. */
@@ -57,6 +57,14 @@ const WORD_H = 0.34;
 const WORD_Y = 0.42;
 /** Laid-ness past which the lead line and the columns are let in. */
 const REVEAL = 0.86;
+/** How hard the open card is pulled toward the pointer. Lower floats more. */
+const FLOAT_PULL = 0.018;
+/** Velocity kept each frame. Closer to 1 overshoots and drifts longer. */
+const FLOAT_DRAG = 0.9;
+/** Gap between the pointer and the top of the card hanging under it. */
+const FLOAT_GAP = 36;
+/** How far above the letters the card stays open, as a share of their height. */
+const ZONE_ABOVE = 0.3;
 
 interface Stone {
   hx: number;
@@ -68,8 +76,8 @@ interface Stone {
   turn: number;
   alpha: number;
   colour: string;
-  /** 0, 1 or 2 — which column owns it. */
-  group: number;
+  /** 0, 1 or 2 — which card owns it. Null for the logo's dot. */
+  group: number | null;
 }
 
 const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
@@ -100,129 +108,6 @@ function launch(seed: number, width: number, height: number) {
   return { sx: along * width, sy: height + out * height };
 }
 
-interface Scanned {
-  data: Uint8ClampedArray;
-  w: number;
-  top: number;
-  dotTop: number;
-  dotLeft: number;
-  dotRight: number;
-  bottom: number;
-}
-
-/**
- * The hook of a question mark, in grid cells, ready to be laid above a
- * dot that already exists.
- *
- * A question mark is a hook over a dot, and the logotype already ends in
- * one — so the glyph is rendered, split at the empty row above its own
- * dot, and only the top half is kept. Nothing about the wordmark moves.
- *
- * Scaled by the HEIGHT it has to fill, not by matching the glyph's own
- * dot to the real one. That reading is tempting and wrong: the dot in
- * this logotype is a brand mark, drawn at 26% of the cap height where
- * punctuation would sit near 18%, so sizing the hook from it produced a
- * question mark 44 rows tall over a wordmark of 35 — half again taller
- * than the name it belongs to.
- *
- * Cells come back as offsets from the hook's bottom centre, so the
- * caller can hang it directly above the dot already on the page.
- */
-function hookCells(mark: string, font: string, hookCellsTall: number) {
-  const pad = 40;
-  const probe = document.createElement('canvas');
-
-  const scan = (size: number): Scanned | null => {
-    probe.width = Math.ceil(size * 1.6 + pad * 2);
-    probe.height = Math.ceil(size * 2 + pad * 2);
-    const c = probe.getContext('2d', { willReadFrequently: true });
-    if (!c) return null;
-
-    c.clearRect(0, 0, probe.width, probe.height);
-    c.font = size + 'px ' + font;
-    c.textBaseline = 'alphabetic';
-    c.fillStyle = '#000';
-    c.fillText(mark, pad, probe.height - pad);
-
-    const { data } = c.getImageData(0, 0, probe.width, probe.height);
-    const rowHas: boolean[] = [];
-    let top = -1;
-    let bottom = -1;
-
-    for (let y = 0; y < probe.height; y++) {
-      let any = false;
-      for (let x = 0; x < probe.width; x++) {
-        if (data[(y * probe.width + x) * 4 + 3] > 128) {
-          any = true;
-          break;
-        }
-      }
-      rowHas[y] = any;
-      if (any) {
-        if (top < 0) top = y;
-        bottom = y;
-      }
-    }
-    if (top < 0) return null;
-
-    // Walk up from the bottom to the gap: below it is the glyph's dot.
-    let dotTop = bottom;
-    while (dotTop > top && rowHas[dotTop - 1]) dotTop--;
-    // No separate dot means this is not a question-mark shape.
-    if (dotTop <= top) return null;
-
-    let dotLeft = probe.width;
-    let dotRight = -1;
-    for (let y = dotTop; y <= bottom; y++) {
-      for (let x = 0; x < probe.width; x++) {
-        if (data[(y * probe.width + x) * 4 + 3] > 128) {
-          if (x < dotLeft) dotLeft = x;
-          if (x > dotRight) dotRight = x;
-        }
-      }
-    }
-    return { data, w: probe.width, top, dotTop, dotLeft, dotRight, bottom };
-  };
-
-  // One pass to measure the hook, a second at the size that makes it
-  // exactly as tall as the room above the dot.
-  const first = scan(240);
-  if (!first) return [];
-  const tall = first.dotTop - first.top;
-  if (tall < 1) return [];
-  const sized = scan(Math.max(18, (240 * hookCellsTall) / tall));
-  if (!sized) return [];
-
-  /*
-    Horizontally the hook is pinned to the glyph's OWN dot, not to the
-    middle of the hook's box. In no typeface does a question mark sit
-    squarely over its point: Bricolage puts the hook 6.5px to the right
-    of it, Lateef puts it 6px to the left. Centring the box throws that
-    away and bends the mark the wrong way — in opposite directions in
-    the two languages, which is exactly how it looked wrong in both.
-
-    Vertically it hangs from its own bottom edge, because the dot it has
-    to clear on the page is this brand's oversized one, not the glyph's.
-  */
-  const dotCx = (sized.dotLeft + sized.dotRight) / 2;
-  const hookBottom = sized.dotTop - 1;
-
-  const cells: { dc: number; dr: number }[] = [];
-  const seen = new Set<string>();
-  for (let y = sized.top; y < sized.dotTop; y++) {
-    for (let x = 0; x < sized.w; x++) {
-      if (sized.data[(y * sized.w + x) * 4 + 3] <= 128) continue;
-      const dc = Math.round(x - dotCx);
-      const dr = Math.round(y - hookBottom);
-      const key = dc + ',' + dr;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      cells.push({ dc, dr });
-    }
-  }
-  return cells;
-}
-
 /**
  * Purely decorative paving, plus the copy that answers the question the
  * paving asks. Mount with `client:visible`.
@@ -232,8 +117,6 @@ export default function Mosaic({ src, locale, copy }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const card = useRef<HTMLDivElement>(null);
   const active = useRef<number | null>(null);
-  /** Where each third's card hangs, in canvas pixels. Set on measure. */
-  const anchors = useRef<{ x: number[]; y: number; box: number[] } | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [zone, setZone] = useState<number | null>(null);
 
@@ -247,9 +130,12 @@ export default function Mosaic({ src, locale, copy }: Props) {
 
     const still = !window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
     const rtl = document.documentElement.dir === 'rtl';
-    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
 
     let stones: Stone[] = [];
+    /** The laid word's bounds, in canvas pixels. Set on measure. */
+    let wordBox: number[] | null = null;
+    /** The open card: where it is, and how fast it is drifting. */
+    const drift = { x: 0, y: 0, vx: 0, vy: 0, w: 0, h: 0 };
     let stone = 0;
     let frame = 0;
     let live = false;
@@ -277,81 +163,72 @@ export default function Mosaic({ src, locale, copy }: Props) {
       const height = cv.clientHeight;
       if (!width || !height) return false;
 
-      stone = Math.min((width * WORD) / cols, (height * WORD_H) / rows);
-      const wordH = stone * rows;
-
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       cv.width = Math.round(width * dpr);
       cv.height = Math.round(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      const originX = (width - stone * cols) / 2;
-      const originY = height * WORD_Y - wordH / 2;
-
-      // Each third's card hangs under the middle of that third. The
-      // order is reversed under RTL for the same reason the stone
-      // groups are: the first third is the one its reader meets first.
-      const wordW = stone * cols;
-      const thirds = [0, 1, 2].map((i) => originX + wordW * ((i + 0.5) / 3));
-      anchors.current = {
-        x: rtl ? thirds.slice().reverse() : thirds,
-        y: originY + wordH + stone * 2.5,
-        box: [originX, originY, originX + wordW, originY + wordH],
+      // A wordmark with mapped letters gives each its own grey and its
+      // own card; one without is split into thirds, mirrored under RTL
+      // so the first third owns the side its reader starts from.
+      const letterOf = LOGO_LETTERS[locale];
+      const thirdOf = (col: number) => {
+        const third = Math.max(0, Math.min(2, Math.floor((col / cols) * 3)));
+        return rtl ? 2 - third : third;
       };
 
-      const place = (col: number, row: number, seed: number, colour: string): Stone => {
-        // Thirds of the word, mirrored under RTL so the first column
-        // owns the side its reader starts from.
-        const third = Math.min(2, Math.floor((col / cols) * 3));
-        return {
-          hx: originX + col * stone,
-          hy: originY + row * stone,
-          ...launch(seed, width, height),
-          cx: 0,
-          cy: 0,
-          turn: clamp01(col / (cols - 1)),
-          alpha: RESTING,
-          colour,
-          group: rtl ? 2 - third : third,
-        };
-      };
-
-      const next: Stone[] = [];
-      const tally = new Map<string, number>();
+      interface Cell {
+        col: number;
+        row: number;
+        seed: number;
+        colour: string;
+        group: number | null;
+      }
+      const cells: Cell[] = [];
+      const spot = LOGO_DOT[locale];
+      // The brand dot, in cells, with one to spare for its soft edge.
+      const dotReach = (spot.d * cols) / 2 + 1;
 
       for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
           const i = (row * cols + col) * 4;
           if (data[i + 3] < 128) continue;
-          const colour = 'rgb(' + data[i] + ' ' + data[i + 1] + ' ' + data[i + 2] + ')';
-          tally.set(colour, (tally.get(colour) ?? 0) + 1);
-          next.push(place(col, row, row * cols + col, colour));
+          let colour = 'rgb(' + data[i] + ' ' + data[i + 1] + ' ' + data[i + 2] + ')';
+          let group: number | null = thirdOf(col);
+          if (letterOf) {
+            // The dot belongs to no letter: it keeps the brand's colour
+            // and opens no card.
+            const onDot =
+              Math.hypot(col + 0.5 - spot.cx * cols, row + 0.5 - spot.cy * rows) <= dotReach;
+            group = onDot ? null : letterOf((col + 0.5) / cols, (row + 0.5) / rows);
+            // The word stays black; a seeded scatter of each letter's
+            // stones is laid in its own grey, the same ones every time.
+            if (group !== null && noise(row * cols + col + 101) < SPECKLE) {
+              colour = LETTER_SHADES[group];
+            }
+          }
+          cells.push({ col, row, seed: row * cols + col, colour, group });
         }
       }
 
-      // The ink the wordmark is actually drawn in, for the added hook.
-      let ink = '#18181c';
-      let best = 0;
-      tally.forEach((n, colour) => {
-        if (n > best) {
-          best = n;
-          ink = colour;
-        }
-      });
+      stone = Math.min((width * WORD) / cols, (height * WORD_H) / rows);
+      const wordW = stone * cols;
+      const wordH = stone * rows;
+      const originX = (width - wordW) / 2;
+      const originY = height * WORD_Y - wordH / 2;
+      wordBox = [originX, originY, originX + wordW, originY + wordH];
 
-      // The hook of the question mark, laid over the dot already there.
-      const spot = LOGO_DOT[locale];
-      const mark = locale === 'ar' ? '؟' : '?';
-      const font = getComputedStyle(document.body).fontFamily;
-      const dotCol = spot.cx * cols;
-      const dotRow = spot.cy * rows;
-      // The hook hangs from just above the dot up to the top of the
-      // wordmark, so it reads at the same height as the letters.
-      const foot = dotRow - (spot.d * cols) / 2 - 1;
-      const hook = hookCells(mark, font, Math.max(4, foot));
-      for (const cell of hook) {
-        next.push(place(dotCol + cell.dc, foot + cell.dr, 7919 + cell.dc * 31 + cell.dr, ink));
-      }
+      const next: Stone[] = cells.map(({ col, row, seed, colour, group }) => ({
+        hx: originX + col * stone,
+        hy: originY + row * stone,
+        ...launch(seed, width, height),
+        cx: 0,
+        cy: 0,
+        turn: clamp01(col / (cols - 1)),
+        alpha: RESTING,
+        colour,
+        group,
+      }));
 
       /*
         Seeded at the laid-ness the scroll has already reached, not at
@@ -376,8 +253,10 @@ export default function Mosaic({ src, locale, copy }: Props) {
       const group = active.current;
       for (const s of stones) {
         const lit = group !== null && s.group === group;
+        // The letter keeps its own grey; it stands out because the rest
+        // of the word steps back, not because it changes colour.
         ctx.globalAlpha = lit ? s.alpha : s.alpha * (1 - 0.68 * focus);
-        ctx.fillStyle = lit && focus > 0.02 ? accent : s.colour;
+        ctx.fillStyle = s.colour;
         ctx.fillRect(s.cx, s.cy, size, size);
       }
       ctx.globalAlpha = 1;
@@ -438,8 +317,65 @@ export default function Mosaic({ src, locale, copy }: Props) {
         setRevealed(due);
       }
 
+      if (active.current !== null) float();
+
       draw();
       frame = live ? requestAnimationFrame(step) : 0;
+    };
+
+    /** Where the card wants to be: hanging just under the pointer. */
+    const aim = () => {
+      const x = pointer.x - drift.w / 2;
+      const y = pointer.y + FLOAT_GAP;
+      return {
+        x: Math.min(Math.max(x, 12), cv.clientWidth - drift.w - 12),
+        y: Math.min(Math.max(y, 12), cv.clientHeight - drift.h - 12),
+      };
+    };
+
+    /*
+      The card follows the pointer as if nothing were holding it down: a
+      soft spring that overshoots and settles, a slow bob that never
+      quite stops, and a tilt into the direction it is being pulled.
+    */
+    const float = () => {
+      const el = card.current;
+      if (!el) return;
+      const target = aim();
+      drift.vx = (drift.vx + (target.x - drift.x) * FLOAT_PULL) * FLOAT_DRAG;
+      drift.vy = (drift.vy + (target.y - drift.y) * FLOAT_PULL) * FLOAT_DRAG;
+      drift.x += drift.vx;
+      drift.y += drift.vy;
+
+      const t = performance.now() / 1000;
+      const bobX = Math.sin(t * 0.9) * 5;
+      const bobY = Math.sin(t * 1.3 + 1) * 7;
+      const tilt = Math.max(-7, Math.min(7, drift.vx * 0.4)) + Math.sin(t * 0.7) * 1.2;
+      el.style.transform =
+        'translate(' +
+        (drift.x + bobX).toFixed(1) +
+        'px, ' +
+        (drift.y + bobY).toFixed(1) +
+        'px) rotate(' +
+        tilt.toFixed(2) +
+        'deg)';
+    };
+
+    /** The letter whose stones lie nearest the pointer. */
+    const groupAt = (x: number, y: number) => {
+      let best = Infinity;
+      let found: number | null = null;
+      // Home positions, not live ones: the stones shy away from the
+      // pointer, and chasing them would make the card flicker.
+      for (const s of stones) {
+        if (s.group === null) continue;
+        const d = Math.hypot(s.hx + stone / 2 - x, s.hy + stone / 2 - y);
+        if (d < best) {
+          best = d;
+          found = s.group;
+        }
+      }
+      return found;
     };
 
     let lastZone: number | null = null;
@@ -455,34 +391,36 @@ export default function Mosaic({ src, locale, copy }: Props) {
         pointer.x < box.width + 80 &&
         pointer.y < box.height + 80;
 
-      // Which third of the paved word the pointer is over, if any. The
-      // band is taller than the letters: asking someone to stay inside
-      // a 30px strip to keep a card open would be a chore.
-      const a = anchors.current;
+      // Anywhere inside the name's box keeps a card open, the paper
+      // between and inside the letters included, and it belongs to the
+      // nearest letter. The box reaches a little above the letters, so
+      // the space over ف's dot still counts. Leaving it — further up,
+      // below or past either end — puts the card away.
       let next: number | null = null;
-      if (a && pointer.on && shown) {
-        const [x0, y0, x1, y1] = a.box;
-        const slack = (y1 - y0) * 0.4;
-        const inside =
-          pointer.x >= x0 && pointer.x <= x1 && pointer.y >= y0 - slack && pointer.y <= y1 + slack;
-        if (inside) {
-          const third = Math.min(2, Math.max(0, Math.floor(((pointer.x - x0) / (x1 - x0)) * 3)));
-          next = rtl ? 2 - third : third;
+      if (wordBox && pointer.on && shown) {
+        const [x0, y0, x1, y1] = wordBox;
+        const top = y0 - (y1 - y0) * ZONE_ABOVE;
+        if (pointer.x >= x0 && pointer.x <= x1 && pointer.y >= top && pointer.y <= y1) {
+          next = groupAt(pointer.x, pointer.y);
         }
       }
 
       if (next === lastZone) return;
+      const opening = lastZone === null;
       lastZone = next;
       active.current = next;
       setZone(next);
 
-      if (next !== null && a && card.current) {
-        // Kept clear of the edges, or a card on an outer third would
-        // hang half off the screen.
-        const half = card.current.offsetWidth / 2;
-        const x = Math.min(Math.max(a.x[next], half + 12), cv.clientWidth - half - 12);
-        card.current.style.transform =
-          'translate(' + x.toFixed(1) + 'px, ' + a.y.toFixed(1) + 'px) translateX(-50%)';
+      // A card that has just opened starts where it is going, rather
+      // than sailing in from wherever the last one was let go.
+      if (next !== null && opening && card.current) {
+        drift.w = card.current.offsetWidth;
+        drift.h = card.current.offsetHeight;
+        const start = aim();
+        drift.x = start.x;
+        drift.y = start.y;
+        drift.vx = 0;
+        drift.vy = 0;
       }
     };
 
@@ -516,12 +454,7 @@ export default function Mosaic({ src, locale, copy }: Props) {
       window.addEventListener('resize', onResize);
     };
 
-    // The hook is drawn with the page's own display face, so it has to
-    // be the real one by then — a fallback would give the wrong shape.
-    image.onload = () => {
-      if (document.fonts?.ready) document.fonts.ready.then(start).catch(start);
-      else start();
-    };
+    image.onload = start;
 
     // Nothing to pave; the runway would otherwise stand as empty page.
     image.onerror = () => {
@@ -548,8 +481,8 @@ export default function Mosaic({ src, locale, copy }: Props) {
             crossed an edge yet is simply not on the page. */}
         <canvas ref={canvas} className={styles.canvas} aria-hidden="true" />
 
-        {/* The paved wordmark carries the rest of the question, but it
-            is a picture — the readable form of the line lives here. */}
+        {/* The paved wordmark is a picture; the question is asked here,
+            in words, in full. */}
         <p id="origin-q" className={styles.lead + ' ' + veil}>
           {copy.lead} {locale === 'ar' ? 'رصف؟' : 'Rasf?'}
         </p>
@@ -557,8 +490,8 @@ export default function Mosaic({ src, locale, copy }: Props) {
         {/*
           The visual card. Hidden from assistive tech on purpose: it is
           an echo of the list below, which is always in the document.
-          Width is fixed in CSS, so its edge-clamping stays correct no
-          matter which of the three it is showing.
+          Width is fixed in CSS, so the size measured when it opens
+          keeps its edge-clamping right whichever letter it shows.
         */}
         <div
           ref={card}

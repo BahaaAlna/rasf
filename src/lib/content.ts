@@ -48,3 +48,11 @@ export function getOrigin(locale: Locale) {
 }
 
 export type OriginSection = ReturnType<typeof getOrigin>;
+
+import { work } from '../data/work';
+
+export function getWork(locale: Locale) {
+  return work[locale];
+}
+
+export type WorkSection = ReturnType<typeof getWork>;
