@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import RepelLink from './RepelLink';
-import { LOGO_DOT } from '../data/logoDot';
+import { LOGO_DOT } from '../../../lib/logo/dot';
 import styles from './Header.module.css';
 
 export interface HeaderProps {
@@ -182,8 +182,10 @@ export default function Header({
         ))}
       </nav>
 
-      <a className={styles.switch} href={switchHref} hrefLang={switchLang} lang={switchLang}>
-        {switchLabel}
+      <a className={styles.switch} href={switchHref} hrefLang={switchLang} lang={switchLang} data-weightless>
+        <span className={styles.switchLabel} data-weightless-label>
+          {switchLabel}
+        </span>
       </a>
 
       <img

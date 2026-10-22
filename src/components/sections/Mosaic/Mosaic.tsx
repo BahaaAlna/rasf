@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { LOGO_DOT } from '../data/logoDot';
-import { LETTER_SHADES, LOGO_LETTERS, SPECKLE } from '../data/logoLetters';
-import type { OriginContent } from '../data/origin';
+import { LOGO_DOT } from '../../../lib/logo/dot';
+import { LETTER_SHADES, LOGO_LETTERS, SPECKLE } from '../../../lib/logo/letters';
+import type { OriginSection } from '../../../lib/content';
 import styles from './Mosaic.module.css';
 
 interface Props {
   /** The logotype. Its pixels ARE the layout. */
   src: string;
   locale: 'ar' | 'en';
-  copy: OriginContent;
+  copy: OriginSection;
 }
 
 /*

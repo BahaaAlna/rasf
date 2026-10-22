@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import styles from './Hero.module.css';
 import WireframeMotif from './WireframeMotif';
-import MagneticButton from './MagneticButton';
+import MagneticButton from '../../ui/MagneticButton/MagneticButton';
 
 export interface HeroProps {
   /** Static part of the sentence, before the cycling word. */

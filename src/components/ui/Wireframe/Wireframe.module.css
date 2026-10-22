@@ -11,7 +11,9 @@
   on hover. Both animations use fill-mode:backwards for the same reason:
   once they finish, normal styles — and transitions — take over.
 
-  Pure CSS. This component ships no JavaScript.
+  Pure CSS. This component ships no JavaScript. The hero draws its plan
+  on load; the service cards pass `reveal`, and theirs waits, paused,
+  until the shared observer marks it in view.
 */
 
 .motif {
@@ -19,10 +21,29 @@
      composition in both languages instead of mirroring under dir=rtl. */
   direction: ltr;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(var(--cols, 6), 1fr);
   gap: clamp(0.4rem, 0.9vw, 0.7rem);
   width: 100%;
-  max-width: 32rem;
+  max-width: var(--max, 32rem);
+}
+
+/* A plan that draws on reveal doesn't rise like other reveals; its blocks
+   do. Until it is in view every block waits at the start of its drawing. */
+.motif[data-reveal] {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+.motif[data-reveal]:not(:global(.is-revealed)) .cell,
+.motif[data-reveal]:not(:global(.is-revealed)) .cell::before {
+  animation-play-state: paused;
+}
+
+/* Without JS nothing would ever mark it, so just show the finished plan. */
+:global(.no-js) .cell,
+:global(.no-js) .cell::before {
+  animation: none;
 }
 
 .cell {
@@ -59,6 +80,23 @@
   animation: fill var(--dur-reveal) var(--ease-out-power3)
     calc(var(--delay) + 0.75s) backwards;
   transition: background var(--dur-hover-out) var(--ease-out-expo);
+}
+
+/* An empty slot: holds its place in the grid, draws nothing. */
+.ghost {
+  visibility: hidden;
+}
+
+/* A circle as wide as it is tall, centred in its columns. */
+.round {
+  inline-size: var(--cell-h);
+  justify-self: center;
+  border-radius: 50%;
+}
+
+/* On the bottom of its row — so a run of them reads as a bar chart. */
+.end {
+  align-self: end;
 }
 
 @keyframes draw {

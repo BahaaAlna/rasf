@@ -3,7 +3,7 @@
   its own scatter of grey and own its own card.
 
   Measured from `logo-ar.png` and `logo-en.png`, as fractions of the logo box like the dot
-  in `logoDot.ts`. ر is a shape of its own, but its tail runs back under
+  in `dot.ts`. ر is a shape of its own, but its tail runs back under
   ص below the line — ص never reaches lower than 0.78 — so it is told
   apart by height as well as by width. ص and ف are one joined shape, cut
   in the middle of the kashida that joins them.

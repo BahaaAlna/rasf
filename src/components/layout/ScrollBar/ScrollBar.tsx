@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getLenis } from '../lib/lenis';
+import { getLenis } from '../../../lib/lenis';
 import styles from './ScrollBar.module.css';
 
 const MIN_THUMB = 40;

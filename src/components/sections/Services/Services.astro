@@ -1,0 +1,317 @@
+---
+/*
+  Services: a sentence about the studio, then each service as a card — its
+  number and bracketed tag across the top, a big heading, what it covers
+  and a short description with a button on to Contact, and on the end
+  side a tiny screen doing the service, on a loop (LiveUI.astro).
+
+  The cards stack as the page scrolls, like a deck being dealt. Each one
+  sticks under the header with a sliver more room than the one before, so
+  the edges of the earlier cards stay peeking out above it. As a card is
+  covered it settles back into the pile: shrinking a little and dimming,
+  more for every card laid over it. When the list ends the whole deck
+  scrolls away together.
+
+  Sticky positioning does the stacking; `cardDeck.ts` only works out how
+  deep each card sits and hands that to CSS as `--depth`.
+*/
+import type { ServicesSection } from '../../../lib/content';
+import type { Locale } from '../../../lib/i18n';
+import LiveUI, { type LiveKind } from './LiveUI.astro';
+
+interface Props {
+  locale: Locale;
+  /** The section's heading — the nav's own word for it. */
+  title: string;
+  copy: ServicesSection;
+  /** The button on every card, which goes to Contact. */
+  cta: string;
+}
+
+const { locale, title, copy, cta } = Astro.props;
+/** Which little screen each card shows, in the order of data/services.ts. */
+const KINDS: LiveKind[] = ['website', 'app', 'store', 'brand'];
+const number = (n: number) => n.toLocaleString(locale === 'ar' ? 'ar-EG' : 'en', { minimumIntegerDigits: 2 });
+---
+
+<section id="services" class="services" aria-labelledby="services-title">
+  <div class="u-wrap">
+    <header class="services__head">
+      <h2 id="services-title" class="services__title" data-reveal>{title}</h2>
+      <p class="services__intro" data-reveal style="--reveal-delay: 0.08s">{copy.intro}</p>
+    </header>
+
+    <ol class="services__deck">
+      {
+        copy.services.map((service, i) => (
+          <li class="card" style={`--i: ${i}`}>
+            <article class="card__sheet">
+              <div class="card__text">
+                <div class="card__top">
+                  <span class="card__n" aria-hidden="true">
+                    {number(i + 1)}
+                  </span>
+                  <p class="u-mono">[ {service.tag} ]</p>
+                </div>
+                <h3 class="card__title">{service.title}</h3>
+                <div class="card__foot">
+                  <ul class="card__caps">
+                    {service.capabilities.map((item) => (
+                      <li>{item}</li>
+                    ))}
+                  </ul>
+                  <div>
+                    <p class="card__desc">{service.description}</p>
+                    <a class="card__cta" href="#contact" data-weightless>
+                      <span class="card__cta-label" data-weightless-label>
+                        {cta}
+                        <svg class="u-flip" viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M4 12h15M13 6l6 6-6 6" />
+                        </svg>
+                      </span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div class="card__art">
+                <LiveUI kind={KINDS[i % KINDS.length]} />
+              </div>
+            </article>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<script>
+  import { initCardDeck } from './cardDeck';
+
+  document.addEventListener('astro:page-load', initCardDeck);
+</script>
+
+<style>
+  .services {
+    border-block-start: 1px solid var(--rule);
+    padding-block: var(--space-2xl);
+  }
+
+  /* The heading on the start side, the intro beside it on a wide screen. */
+  .services__head {
+    display: grid;
+    gap: var(--space-md) var(--space-2xl);
+    margin-block-end: var(--space-2xl);
+  }
+
+  @media (min-width: 60rem) {
+    .services__head {
+      grid-template-columns: 5fr 7fr;
+      align-items: end;
+    }
+  }
+
+  .services__title {
+    font-size: var(--step-3);
+    color: var(--ink);
+  }
+
+  .services__intro {
+    max-inline-size: 36ch;
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+
+  :global([dir='rtl']) .services__title {
+    font-size: calc(var(--step-3) * var(--ar-scale));
+  }
+
+  :global([dir='rtl']) .services__intro {
+    font-size: calc(var(--step-1) * var(--ar-scale));
+    line-height: calc(1.45 * var(--ar-leading));
+  }
+
+  .services__deck {
+    display: grid;
+    gap: var(--space-xl);
+    /* How much of each earlier card's top edge stays showing. */
+    --peek: 0.9rem;
+  }
+
+  /*
+    The card's slot in the deck. Sticky, a peek lower than the one before;
+    later cards come later in the document, so they lie on top without
+    any z-index.
+  */
+  .card {
+    position: sticky;
+    inset-block-start: calc(var(--header-h) + var(--space-md) + var(--i) * var(--peek));
+  }
+
+  /*
+    The card itself. Kept separate from its slot so the slot can stick
+    while the sheet scales: shrinking from the top edge keeps that edge
+    where it peeks out, and the sides draw in like a card set down.
+  */
+  .card__sheet {
+    --depth: 0;
+    position: relative;
+    display: grid;
+    gap: var(--space-lg) var(--space-xl);
+    min-block-size: clamp(17rem, 40svh, 22rem);
+    padding: var(--space-lg);
+    background: var(--paper-sunk);
+    border: 1px solid var(--rule);
+    box-shadow: 0 -18px 40px -32px rgb(0 0 0 / 0.35);
+    transform: scale(calc(1 - var(--depth) * 0.05));
+    transform-origin: 50% 0;
+  }
+
+  /*
+    Wide: the words on the start side, the little screen on the end side,
+    filling what used to be empty card. Narrow: the screen is dropped —
+    the card is already as tall as a phone can comfortably show.
+  */
+  @media (min-width: 48rem) {
+    .card__sheet {
+      grid-template-columns: 1fr minmax(12rem, 20rem);
+      align-items: center;
+    }
+  }
+
+  @media (max-width: 47.99rem) {
+    .card__art {
+      display: none;
+    }
+  }
+
+  .card__text {
+    display: flex;
+    flex-direction: column;
+    block-size: 100%;
+  }
+
+  /* Dimming as it goes deeper: a wash of ink over the whole card. */
+  .card__sheet::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--ink);
+    opacity: min(calc(var(--depth) * 0.08), 0.24);
+    pointer-events: none;
+  }
+
+  .card__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-md);
+  }
+
+  .card__n {
+    font-size: var(--step-2);
+    line-height: var(--leading-tight);
+    color: var(--ink);
+  }
+
+  /* Shares the card with the picture now, so a size below --step-4 keeps
+     even the longest heading on one line at desktop widths. */
+  .card__title {
+    margin-block-start: var(--space-md);
+    font-size: var(--step-3);
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  :global([dir='rtl']) .card__n {
+    font-size: calc(var(--step-2) * var(--ar-scale));
+  }
+
+  /* No capitals in Arabic; the usual scale keeps it level with the Latin. */
+  :global([dir='rtl']) .card__title {
+    font-size: calc(var(--step-3) * var(--ar-scale));
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* Pushed to the bottom of the card, whatever its height. */
+  .card__foot {
+    display: grid;
+    gap: var(--space-md) var(--space-xl);
+    margin-block-start: auto;
+    padding-block-start: var(--space-lg);
+  }
+
+  @media (min-width: 64rem) {
+    .card__foot {
+      grid-template-columns: auto 1fr;
+      align-items: start;
+    }
+  }
+
+  .card__caps {
+    list-style: none;
+    padding: 0;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  .card__desc {
+    max-inline-size: 36ch;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  /*
+    The way on to Contact. A pill like the hero's ghost button, floating
+    toward the pointer with every other button (data-weightless).
+  */
+  .card__cta {
+    display: inline-block;
+    margin-block-start: var(--space-md);
+    padding: var(--space-xs) var(--space-md);
+    border: 1px solid var(--ink);
+    border-radius: var(--radius-pill);
+    color: var(--ink);
+    font-size: var(--step--1);
+    transition:
+      background var(--dur-base) var(--ease-out-power4),
+      color var(--dur-base) var(--ease-out-power4);
+  }
+
+  :global([dir='rtl']) .card__cta {
+    font-size: calc(var(--step--1) * var(--ar-scale));
+  }
+
+  .card__cta:hover,
+  .card__cta:focus-visible {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .card__cta-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    white-space: nowrap;
+  }
+
+  .card__cta svg {
+    inline-size: 0.9rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+
+  :global([dir='rtl']) .card__desc,
+  :global([dir='rtl']) .card__caps {
+    line-height: calc(1.5 * var(--ar-leading));
+  }
+
+  @media (max-width: 30rem) {
+    .card__sheet {
+      padding: var(--space-md);
+    }
+  }
+</style>

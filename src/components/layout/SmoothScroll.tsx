@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import Lenis from 'lenis';
-import { setLenis } from '../lib/lenis';
+import { setLenis } from '../../lib/lenis';
 
 /**
  * Inertial scrolling, matching the weighted feel of the reference site but

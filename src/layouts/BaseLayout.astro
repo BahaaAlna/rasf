@@ -1,8 +1,8 @@
 ---
 import { ClientRouter } from 'astro:transitions';
-import SmoothScroll from '../components/SmoothScroll';
-import Cursor from '../components/Cursor';
-import ScrollBar from '../components/ScrollBar';
+import SmoothScroll from '../components/layout/SmoothScroll';
+import Cursor from '../components/layout/Cursor/Cursor';
+import ScrollBar from '../components/layout/ScrollBar/ScrollBar';
 import { getLocale, dirFor, localizePath, locales, type Locale } from '../lib/i18n';
 import { getSite } from '../lib/content';
 import '../styles/global.css';
@@ -118,6 +118,16 @@ const ogImage = new URL('/og-default.png', Astro.site ?? content.url);
       document.addEventListener('astro:page-load', scan);
       document.addEventListener('astro:after-swap', scan);
       new MutationObserver(scan).observe(document.body, { childList: true, subtree: true });
+    </script>
+    <script>
+      // Every [data-weightless] button floats toward the pointer. Same
+      // reasoning as above: islands hydrate late and the ClientRouter
+      // swaps the page, so look again whenever the DOM changes.
+      import { initWeightless } from '../lib/motion/weightless';
+
+      initWeightless();
+      document.addEventListener('astro:page-load', initWeightless);
+      new MutationObserver(initWeightless).observe(document.body, { childList: true, subtree: true });
     </script>
   </body>
 </html>

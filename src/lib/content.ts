@@ -6,8 +6,15 @@
   read from Firestore, and not a single component changes.
 */
 
-import { site } from '../data/site';
 import type { Locale } from './i18n';
+import { site } from '../data/site';
+import { hero } from '../data/hero';
+import { ui } from '../data/ui';
+import { origin } from '../data/origin';
+import { work } from '../data/work';
+import { services } from '../data/services';
+import { about } from '../data/about';
+import { contact } from '../data/contact';
 
 export function getSite(locale: Locale) {
   return {
@@ -25,15 +32,11 @@ export function getSite(locale: Locale) {
 
 export type SiteContent = ReturnType<typeof getSite>;
 
-import { hero } from '../data/hero';
-
 export function getHero(locale: Locale) {
   return hero[locale];
 }
 
 export type HeroContent = ReturnType<typeof getHero>;
-
-import { ui } from '../data/ui';
 
 export function getUI(locale: Locale) {
   return ui[locale];
@@ -41,18 +44,32 @@ export function getUI(locale: Locale) {
 
 export type UIContent = ReturnType<typeof getUI>;
 
-import { origin } from '../data/origin';
-
 export function getOrigin(locale: Locale) {
   return origin[locale];
 }
 
 export type OriginSection = ReturnType<typeof getOrigin>;
 
-import { work } from '../data/work';
-
 export function getWork(locale: Locale) {
   return work[locale];
 }
 
 export type WorkSection = ReturnType<typeof getWork>;
+
+export function getServices(locale: Locale) {
+  return services[locale];
+}
+
+export type ServicesSection = ReturnType<typeof getServices>;
+
+export function getAbout(locale: Locale) {
+  return about[locale];
+}
+
+export type AboutSection = ReturnType<typeof getAbout>;
+
+export function getContact(locale: Locale) {
+  return contact[locale];
+}
+
+export type ContactSection = ReturnType<typeof getContact>;

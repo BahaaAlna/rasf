@@ -1,0 +1,14 @@
+/* The wrapper carries the float; the button keeps its own hover
+   styling. Separating them stops the two fighting. */
+.magnet {
+  display: inline-block;
+}
+
+.magnetLabel {
+  /* Holds the label and its arrow; without flex they flow as text and
+     the arrow wraps onto its own line. */
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  white-space: nowrap;
+}

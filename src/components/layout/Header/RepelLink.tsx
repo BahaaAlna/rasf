@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import styles from './Header.module.css';
+import styles from './RepelLink.module.css';
 
 interface Props {
   href: string;

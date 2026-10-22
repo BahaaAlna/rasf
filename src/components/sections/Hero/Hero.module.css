@@ -237,30 +237,6 @@
     color var(--dur-base) var(--ease-out-power4);
 }
 
-/* The wrapper carries the magnetic offset; the button keeps its own
-   hover styling. Separating them stops the two transforms fighting. */
-.magnet {
-  display: inline-block;
-  transition: transform var(--dur-slow) var(--ease-out-expo);
-}
-
-.magnetLabel {
-  /* Holds the label and its arrow; without flex they flow as text and
-     the arrow wraps onto its own line. */
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  white-space: nowrap;
-  transition: transform var(--dur-slow) var(--ease-out-expo);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .magnet,
-  .magnetLabel {
-    transition: none;
-  }
-}
-
 .actionPrimary {
   background: var(--ink);
   color: var(--paper);

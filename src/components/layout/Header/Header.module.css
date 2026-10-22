@@ -51,57 +51,11 @@
   display: flex;
   align-items: center;
   --nav-gap: clamp(var(--space-md), 2.5vw, var(--space-xl));
-  /* No gap: the spacing lives inside each field instead — see .field. */
+  /* No gap: the spacing lives inside each field instead — see .field in RepelLink.module.css. */
   gap: 0;
   /* The outer fields carry a half-gap each, which would push the bar's
      ends outwards; this takes it back so the layout is unchanged. */
   margin-inline: calc(var(--nav-gap) / -2);
-}
-
-/*
-  The magnetic field. It never moves, and that is the whole trick: if the
-  link itself fled the cursor it would slide out from under the pointer,
-  fire pointerleave, spring back, be re-entered, and judder forever — and
-  it could never be clicked. The field keeps a fixed hit area and the word
-  alone is pushed inside it. Padding makes the field wider than the word
-  so the push begins before the pointer reaches the letters; the matching
-  negative margin keeps the bar's spacing exactly as it was.
-*/
-.field {
-  display: inline-block;
-  /*
-    Half the gap on each side, and no negative inline margin to take it
-    back, so neighbouring fields TOUCH. There is no dead strip between
-    two words for the pointer to fall into, which is the whole point:
-    crossing from one word to the next hands the dot straight over,
-    instead of releasing it home and fetching it back a frame later.
-
-    The block padding is still cancelled, so the bar keeps its height.
-  */
-  padding-inline: calc(var(--nav-gap) / 2);
-  padding-block: var(--space-xs);
-  margin-block: calc(var(--space-xs) * -1);
-}
-
-.link {
-  position: relative;
-  display: inline-block;
-  font-size: var(--nav-size);
-  color: var(--ink);
-  padding-block: var(--space-2xs);
-}
-
-:global([dir='rtl']) .link {
-  /* Same compensation the body copy and the hero make: equal px would
-     leave the Arabic bar looking markedly smaller than the Latin one. */
-  font-size: calc(var(--nav-size) * var(--ar-scale));
-}
-
-/* Carries the transform, so the underline travels with its word instead
-   of staying behind at the link's fixed position. */
-.linkInner {
-  position: relative;
-  display: inline-block;
 }
 
 /*
@@ -154,6 +108,9 @@
 }
 
 .switch {
+  /* Explicit, because the float moves it with `translate`, which an
+     inline box ignores. */
+  display: inline-block;
   font-family: var(--font-mono);
   font-size: var(--step--1);
   letter-spacing: var(--tracking-mono);
@@ -165,6 +122,11 @@
     background var(--dur-base) var(--ease-out-power4),
     color var(--dur-base) var(--ease-out-power4),
     border-color var(--dur-base) var(--ease-out-power4);
+}
+
+/* Inline-block for the same reason: the label floats a little further. */
+.switchLabel {
+  display: inline-block;
 }
 
 .switch:hover,
