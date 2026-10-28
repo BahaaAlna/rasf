@@ -1,10 +1,26 @@
 ---
 /*
   What every page shows while the site is in maintenance mode, in place
-  of its header, content and footer (see BaseLayout): the name with its
-  dot, that we'll be back, and the email for anything that can't wait.
-  A way to the same note in the other language, and nothing else.
+  of its header, content and footer (see BaseLayout).
+
+  It opens with the logo arriving: the blue dot appears on its own, large,
+  and shrinks while the name fades up beneath it; then it falls like a
+  ball onto the name, bounces off it, and settles into its place as the
+  name's full stop. Then the note: that we'll be back, and the email for anything
+  that can't wait. A way to the same note in the other language, and
+  nothing else.
+
+  The logotype is the artwork as drawn, never altered. The travelling dot
+  is the dot artwork, and lands exactly on the dot painted into the logo
+  (lib/logo/dot.ts says where), so once it has landed the two are one.
+  The whole entrance is CSS: it plays without JavaScript, and with
+  reduced motion everything is simply there.
 */
+import { getImage } from 'astro:assets';
+import logoAr from '../../assets/logo-ar.png';
+import logoEn from '../../assets/logo-en.png';
+import dotSrc from '../../assets/dot.png';
+import { LOGO_DOT } from '../../lib/logo/dot';
 import { getMaintenance, getSite, getUI } from '../../lib/content';
 import { localizePath, otherLocale, type Locale } from '../../lib/i18n';
 
@@ -18,6 +34,51 @@ const ui = getUI(locale);
 const note = getMaintenance(locale);
 const other = otherLocale(locale);
 
+const logo = await getImage({ src: locale === 'ar' ? logoAr : logoEn, format: 'webp', width: 960 });
+const dot = await getImage({ src: dotSrc, format: 'webp', width: 96 });
+
+/*
+  The ball's path, counted in its own diameters from where it ends (its
+  spot in the logo): where it starts (the middle of the logo, BIG times
+  its final size), the top of the letter it hits, how high it waits above
+  that letter before dropping, and the top of its bounce from there.
+*/
+const spot = LOGO_DOT[locale];
+const ratio = Number(logo.attributes.width) / Number(logo.attributes.height);
+const BIG = 0.24; // the opening ball, as a fraction of the logo's width
+
+/*
+  Where the ball hits the name: the highest point of the letter next to
+  the dot (the top of the f; in Arabic, the dot of the ف). And where it
+  first comes down after that, just beyond its spot: the f's hook and bar
+  overhang the dot, so the ball lands clear of them and makes its last
+  small hop back in underneath. Fractions of the logo box, measured from
+  the source PNGs like LOGO_DOT.
+*/
+const HIT = {
+  en: { x: 0.87, top: 0.007, land: 0.99 },
+  ar: { x: 0.25, top: 0.009, land: -0.012 },
+}[locale];
+
+// Across counts in widths of the dot; up and down in its height, which is the same.
+const toX = (x: number) => (x - spot.cx) / spot.d;
+const toY = (y: number) => (y - spot.cy) / (ratio * spot.d);
+const yi = toY(HIT.top) - 0.5; // resting on the letter, not inside it
+const flight = {
+  '--cx': spot.cx,
+  '--cy': spot.cy,
+  '--d': spot.d,
+  '--ratio': ratio,
+  '--big': BIG / spot.d,
+  '--x0': toX(0.5),
+  '--y0': toY(0.5),
+  '--xi': toX(HIT.x),
+  '--xl': toX(HIT.land),
+  '--yi': yi,
+  '--yh': yi - 2.5,
+  '--ya': yi - 1.1,
+};
+
 // The closing full stop takes the accent, as it does across the site.
 const title = note.title.trim();
 const stop = title.endsWith('.');
@@ -26,25 +87,42 @@ const titleText = stop ? title.slice(0, -1) : title;
 
 <main id="main" class="pause u-wrap">
   <header class="pause__bar">
-    <p class="pause__name">{site.name}<span class="pause__dot">.</span></p>
     <a class="pause__switch u-mono" href={localizePath('/', other)} hreflang={other} lang={other}>{ui.switchTo}</a>
   </header>
 
   <div class="pause__body">
-    <h1 class="pause__title">
-      {titleText}{stop && <span class="pause__dot">.</span>}
-    </h1>
-    <p class="pause__message">{note.message}</p>
-    {
-      site.email && (
-        <p class="pause__reach">
-          {note.reach}{' '}
-          <a href={`mailto:${site.email}`} dir="ltr">
-            {site.email}
-          </a>
-        </p>
-      )
-    }
+    <div class="intro" data-locale={locale} style={flight}>
+      <img
+        class="intro__word"
+        src={logo.src}
+        width={logo.attributes.width}
+        height={logo.attributes.height}
+        alt={site.name}
+        decoding="async"
+      />
+      <span class="intro__across" aria-hidden="true">
+        <span class="intro__updown">
+          <img class="intro__dot" src={dot.src} alt="" decoding="async" />
+        </span>
+      </span>
+    </div>
+
+    <div class="pause__words">
+      <h1 class="pause__title">
+        {titleText}{stop && <span class="pause__dot">.</span>}
+      </h1>
+      <p class="pause__message">{note.message}</p>
+      {
+        site.email && (
+          <p class="pause__reach">
+            {note.reach}{' '}
+            <a href={`mailto:${site.email}`} dir="ltr">
+              {site.email}
+            </a>
+          </p>
+        )
+      }
+    </div>
   </div>
 </main>
 
@@ -53,25 +131,12 @@ const titleText = stop ? title.slice(0, -1) : title;
     display: grid;
     grid-template-rows: auto 1fr;
     min-block-size: 100svh;
-    padding-block: var(--space-lg) var(--space-2xl);
+    padding-block: var(--space-lg);
   }
 
   .pause__bar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-md);
-  }
-
-  .pause__name {
-    font-size: var(--step-1);
-    font-weight: 500;
-    letter-spacing: -0.03em;
-    color: var(--ink);
-  }
-
-  .pause__dot {
-    color: var(--accent);
+    justify-content: flex-end;
   }
 
   .pause__switch {
@@ -91,21 +156,300 @@ const titleText = stop ? title.slice(0, -1) : title;
   }
 
   .pause__body {
-    align-self: center;
     display: grid;
-    gap: var(--space-lg);
-    padding-block-start: var(--space-2xl);
+    place-content: center;
+    justify-items: center;
+    gap: var(--space-xl);
+    padding-block: var(--space-xl);
+    text-align: center;
+  }
+
+  /* ---- The logo arriving -------------------------------------------- */
+
+  .intro {
+    position: relative;
+    inline-size: min(26rem, 68vw);
+  }
+
+  /* The Arabic logotype is longer and lower; the same width reads smaller. */
+  .intro[data-locale='ar'] {
+    inline-size: min(30rem, 76vw);
+  }
+
+  .intro__word {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+  }
+
+  /*
+    The ball, exactly over the dot painted into the logo. Three layers,
+    one job each, so its path is a real curve and never a straight line:
+    the outer one carries it across, the middle one up and down (falls
+    speed up, rises slow down, as a ball does), the image itself grows,
+    shrinks and squashes when it lands. Each layer is the dot's own size,
+    so every distance below is counted in dots.
+  */
+  .intro__across {
+    position: absolute;
+    left: calc(var(--cx) * 100%);
+    top: calc(var(--cy) * 100%);
+    inline-size: calc(var(--d) * 100%);
+    aspect-ratio: 1;
+    margin-left: calc(var(--d) * -50%);
+    margin-top: calc(var(--d) * -50%);
+  }
+
+  .intro__updown,
+  .intro__dot {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  /*
+    The beats, over 3.3s:
+      0–1s       the ball appears, large, in the middle, and breathes
+      1–1.9s     it shrinks, rising to above the letter it will hit,
+                 while the name fades up beneath it
+      1.9–2.3s   it drops onto that letter (the f; in Arabic, the dot of
+                 the ف) and is pressed flat
+      2.3–2.95s  it bounces off, in an arc, and lands just beyond its spot
+      2.95–3.3s  one small hop back in, under the f's overhang, and it sits
+    Then the words.
+  */
+  @media (prefers-reduced-motion: no-preference) {
+    .intro {
+      --ease-in: cubic-bezier(0.5, 0, 0.9, 0.5);
+      --ease-out: cubic-bezier(0.1, 0.5, 0.5, 1);
+      --glide: cubic-bezier(0.65, 0, 0.35, 1);
+    }
+
+    .intro__across {
+      animation: across 3.3s linear 0.2s both;
+    }
+
+    .intro__updown {
+      animation: updown 3.3s linear 0.2s both;
+    }
+
+    .intro__dot {
+      animation: size 3.3s linear 0.2s both;
+    }
+
+    /* A hole where the logo's own dot is painted: the ball fills it. */
+    .intro__word {
+      mask-image: radial-gradient(
+        ellipse calc(var(--d) * 60%) calc(var(--d) * var(--ratio) * 60%) at calc(var(--cx) * 100%)
+          calc(var(--cy) * 100%),
+        transparent 99%,
+        #000 100%
+      );
+      animation: word-in 1s var(--ease-out-power4) 1.2s both;
+    }
+
+    .pause__title,
+    .pause__message,
+    .pause__reach,
+    .pause__bar {
+      animation: rise var(--dur-reveal) var(--ease-out-power4) both;
+    }
+
+    .pause__title {
+      animation-delay: 3.3s;
+    }
+
+    .pause__message {
+      animation-delay: 3.45s;
+    }
+
+    .pause__reach {
+      animation-delay: 3.6s;
+    }
+
+    .pause__bar {
+      animation-delay: 3.9s;
+    }
+  }
+
+  @keyframes across {
+    0% {
+      transform: translateX(calc(var(--x0) * 100%));
+    }
+
+    30% {
+      transform: translateX(calc(var(--x0) * 100%));
+      animation-timing-function: var(--glide);
+    }
+
+    52% {
+      transform: translateX(calc(var(--xi) * 100%));
+    }
+
+    /*
+      Straight down onto the letter; across while it bounces off, to land
+      beyond its spot; then back in with the last small hop.
+    */
+    64% {
+      transform: translateX(calc(var(--xi) * 100%));
+      animation-timing-function: cubic-bezier(0.3, 0.5, 0.5, 1);
+    }
+
+    80% {
+      transform: translateX(calc(var(--xl) * 100%));
+    }
+
+    84% {
+      transform: translateX(calc(var(--xl) * 100%));
+      animation-timing-function: var(--glide);
+    }
+
+    95%,
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes updown {
+    0% {
+      transform: translateY(calc(var(--y0) * 100%));
+    }
+
+    30% {
+      transform: translateY(calc(var(--y0) * 100%));
+      animation-timing-function: var(--glide);
+    }
+
+    52% {
+      transform: translateY(calc(var(--yh) * 100%));
+      animation-timing-function: var(--ease-in);
+    }
+
+    /* The hit. */
+    64% {
+      transform: translateY(calc(var(--yi) * 100%));
+      animation-timing-function: var(--ease-out);
+    }
+
+    74% {
+      transform: translateY(calc(var(--ya) * 100%));
+      animation-timing-function: var(--ease-in);
+    }
+
+    /* Home. */
+    84% {
+      transform: none;
+      animation-timing-function: var(--ease-out);
+    }
+
+    89.5% {
+      transform: translateY(-45%);
+      animation-timing-function: var(--ease-in);
+    }
+
+    95%,
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes size {
+    0% {
+      opacity: 0;
+      transform: scale(0);
+      animation-timing-function: var(--ease-out-expo);
+    }
+
+    14% {
+      opacity: 1;
+      transform: scale(var(--big));
+      animation-timing-function: ease-in-out;
+    }
+
+    22% {
+      transform: scale(calc(var(--big) * 1.04));
+      animation-timing-function: ease-in-out;
+    }
+
+    30% {
+      transform: scale(var(--big));
+      animation-timing-function: var(--glide);
+    }
+
+    52%,
+    62% {
+      transform: none;
+    }
+
+    /* Pressed flat against the letter, its underside kept where it hit. */
+    64.5% {
+      transform: translateY(12%) scale(1.24, 0.76);
+    }
+
+    68% {
+      transform: none;
+    }
+
+    82.5% {
+      transform: none;
+    }
+
+    85% {
+      transform: translateY(10%) scale(1.2, 0.8);
+    }
+
+    88% {
+      transform: none;
+    }
+
+    94.5% {
+      transform: none;
+    }
+
+    96.5% {
+      transform: translateY(4%) scale(1.08, 0.92);
+    }
+
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes word-in {
+    from {
+      opacity: 0;
+      transform: translateY(6%);
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem);
+    }
+  }
+
+  /* ---- The note ----------------------------------------------------- */
+
+  .pause__words {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-md);
+  }
+
+  .pause__dot {
+    color: var(--accent);
   }
 
   .pause__title {
-    font-size: var(--step-5);
-    line-height: 0.9;
-    letter-spacing: -0.045em;
+    font-size: var(--step-3);
+    line-height: 1;
+    letter-spacing: -0.04em;
     color: var(--ink);
   }
 
   :global([dir='rtl']) .pause__title {
-    font-size: calc(var(--step-5) * 0.95);
     line-height: var(--ar-leading);
     letter-spacing: 0;
   }

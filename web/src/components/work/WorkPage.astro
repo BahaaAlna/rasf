@@ -13,7 +13,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../layout/Header/SiteHeader.astro';
 import PageFoot from '../blog/PageFoot.astro';
 import DraftA from './drafts/DraftA.astro';
-import { getUI, getWork } from '../../lib/content';
+import { getSite, getUI, getWork } from '../../lib/content';
 import { localizePath, otherLocale, type Locale } from '../../lib/i18n';
 import type { WorkCategory } from '../../data/work';
 
@@ -30,6 +30,7 @@ const Projects = DRAFTS[DRAFT];
 const { locale, category } = Astro.props;
 const ui = getUI(locale);
 const work = getWork(locale);
+const home = { name: getSite(locale).name, path: '/' };
 
 /** Each page's address, its name, and the line under it. */
 const PAGES = {
@@ -41,7 +42,7 @@ const page = PAGES[category];
 const projects = work.projects.filter((project) => project.category === category);
 ---
 
-<BaseLayout path={page.path} title={page.title} description={page.intro}>
+<BaseLayout path={page.path} title={page.title} description={page.intro} trail={[home]}>
   <SiteHeader slot="header" locale={locale} switchHref={localizePath(page.path, otherLocale(locale))} />
 
   <section class="page u-wrap" aria-labelledby="page-title">

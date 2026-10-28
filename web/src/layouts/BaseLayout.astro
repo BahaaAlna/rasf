@@ -3,9 +3,10 @@ import { ClientRouter } from 'astro:transitions';
 import SmoothScroll from '../components/layout/SmoothScroll';
 import Cursor from '../components/layout/Cursor/Cursor';
 import ScrollBar from '../components/layout/ScrollBar/ScrollBar';
-import { getLocale, dirFor, localizePath, locales, type Locale } from '../lib/i18n';
+import { getLocale, dirFor, locales, type Locale } from '../lib/i18n';
 import Maintenance from '../components/layout/Maintenance.astro';
 import { getMaintenance, getSite } from '../lib/content';
+import { absolute, graph, jsonLd, pageUrl, type Crumb, type PageKind } from '../lib/seo';
 import '../styles/global.css';
 
 interface Props {
@@ -20,6 +21,15 @@ interface Props {
   translated?: boolean;
   /** Open Graph type: `article` for a blog post. */
   ogType?: 'website' | 'article';
+  /** The way down to this page for search results, from home, without the page itself. */
+  trail?: Crumb[];
+  /** What this page is, for structured data: an article, a project, or a plain page. */
+  kind?: PageKind;
+  /**
+   * False for a page search engines should leave out (the 404): it gets
+   * noindex, and no canonical or language links, which belong to real pages.
+   */
+  indexed?: boolean;
 }
 
 const locale: Locale = getLocale(Astro.url);
@@ -34,12 +44,16 @@ const {
   path = Astro.url.pathname,
   translated = true,
   ogType = 'website',
+  trail,
+  kind,
+  indexed = true,
 } = Astro.props;
 const alternates = translated ? locales : [locale];
 
 const pageTitle = title ? `${title} — ${content.name}` : `${content.name} — ${content.tagline}`;
-const canonical = new URL(localizePath(path, locale), Astro.site ?? content.url);
-const ogImage = new URL('/og-default.png', Astro.site ?? content.url);
+const canonical = pageUrl(path, locale);
+const ogImage = absolute('/og-default.png');
+const structured = graph({ locale, path, title: title ?? pageTitle, description, trail, kind });
 ---
 
 <!doctype html>
@@ -63,34 +77,35 @@ const ogImage = new URL('/og-default.png', Astro.site ?? content.url);
     }
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
-
     {
-      alternates.map((alt) => (
-        <link
-          rel="alternate"
-          hreflang={alt}
-          href={new URL(localizePath(path, alt), Astro.site ?? content.url)}
-        />
-      ))
-    }
-    {
-      alternates.includes('ar') && (
-        <link
-          rel="alternate"
-          hreflang="x-default"
-          href={new URL(localizePath(path, 'ar'), Astro.site ?? content.url)}
-        />
+      indexed ? (
+        <>
+          <link rel="canonical" href={canonical} />
+          {alternates.map((alt) => (
+            <link rel="alternate" hreflang={alt} href={pageUrl(path, alt)} />
+          ))}
+          {alternates.includes('ar') && <link rel="alternate" hreflang="x-default" href={pageUrl(path, 'ar')} />}
+        </>
+      ) : (
+        <meta name="robots" content="noindex" />
       )
     }
 
     <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={content.name} />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={locale === 'ar' ? 'ar_SY' : 'en_US'} />
+    {alternates.length > 1 && <meta property="og:locale:alternate" content={locale === 'ar' ? 'en_US' : 'ar_SY'} />}
     <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${content.name} — ${content.tagline}`} />
+    {kind?.type === 'article' && <meta property="article:published_time" content={kind.published.toISOString()} />}
     <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json" set:html={jsonLd(structured)} />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

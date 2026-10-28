@@ -17,7 +17,8 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../layout/Header/SiteHeader.astro';
 import PageFoot from '../blog/PageFoot.astro';
-import { getUI, getWork } from '../../lib/content';
+import { getSite, getUI, getWork } from '../../lib/content';
+import { absolute } from '../../lib/seo';
 import { localizePath, otherLocale, type Locale } from '../../lib/i18n';
 import { textToHtml } from '../../lib/text';
 import type { WorkProject } from '../../data/work';
@@ -31,6 +32,7 @@ const { locale, project } = Astro.props;
 const ui = getUI(locale);
 const work = getWork(locale);
 const words = work.project;
+const home = { name: getSite(locale).name, path: '/' };
 
 const kindPath = project.category === 'design' ? '/work/designs' : '/work/software';
 const kindTitle = project.category === 'design' ? ui.workPages.designs : ui.workPages.software;
@@ -49,7 +51,15 @@ const scope = project.scope?.filter(Boolean) ?? [];
 const gallery = project.gallery?.filter(Boolean) ?? [];
 ---
 
-<BaseLayout path={path} title={project.name} description={project.summary} translated={translated} ogType="article">
+<BaseLayout
+  path={path}
+  title={project.name}
+  description={project.summary}
+  translated={translated}
+  ogType="article"
+  trail={[home, { name: kindTitle, path: kindPath }]}
+  kind={{ type: 'project', year: project.year, image: project.image ? absolute(project.image) : undefined }}
+>
   <SiteHeader slot="header" locale={locale} switchHref={switchHref} />
 
   <article class="project">

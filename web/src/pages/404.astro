@@ -12,8 +12,7 @@ import SiteHeader from '../components/layout/Header/SiteHeader.astro';
 import PageFoot from '../components/blog/PageFoot.astro';
 ---
 
-<BaseLayout path="/404" title="٤٠٤" translated={false}>
-  <meta slot="head" name="robots" content="noindex" />
+<BaseLayout path="/404" title="٤٠٤" translated={false} indexed={false}>
   <SiteHeader slot="header" locale="ar" switchHref="/en/" />
 
   <section class="lost u-wrap" aria-labelledby="lost-title">

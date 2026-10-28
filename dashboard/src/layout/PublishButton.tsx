@@ -17,16 +17,25 @@ export default function PublishButton({ email }: { email: string }) {
   const [problem, setProblem] = useState('');
   const [sentAt, setSentAt] = useState<Date | null>(null);
 
-  if (error) return <p className="publish__note publish__note--problem">{error}</p>;
+  if (error) {
+    return (
+      <div className="publish">
+        <p className="publish__note publish__note--problem">{error}</p>
+      </div>
+    );
+  }
   if (!state) return null;
 
   if (!state.hook) {
     return (
       <div className="publish">
+        <p className="publish__status">
+          <span className="publish__dot" aria-hidden="true" />
+          Not connected yet
+        </p>
         <Link className="button publish__button" to="/settings">
           Set up publishing
         </Link>
-        <p className="publish__note">Connect the site’s Cloudflare build once, in Settings.</p>
       </div>
     );
   }
@@ -49,18 +58,18 @@ export default function PublishButton({ email }: { email: string }) {
 
   return (
     <div className="publish">
-      <button className="button publish__button" type="button" onClick={go} disabled={busy}>
-        <span className={`publish__dot ${pending ? 'publish__dot--pending' : ''}`} aria-hidden="true" />
-        {busy ? 'Publishing…' : 'Publish site'}
-      </button>
-      <p className={`publish__note ${problem ? 'publish__note--problem' : ''}`} role="status">
+      <p className={`publish__status ${problem ? 'publish__status--problem' : ''}`} role="status">
+        <span className={`publish__dot ${pending || sentAt ? 'publish__dot--pending' : ''}`} aria-hidden="true" />
         {problem ||
           (sentAt
-            ? 'Building now. Live in a minute or two.'
+            ? 'Building now, live in a minute or two'
             : pending
-              ? 'Changes not live yet.'
-              : `Up to date${state.lastPublishedAt ? ` · ${when(state.lastPublishedAt)}` : ''}.`)}
+              ? 'Changes not live yet'
+              : `Up to date${state.lastPublishedAt ? ` · ${when(state.lastPublishedAt)}` : ''}`)}
       </p>
+      <button className="button publish__button" type="button" onClick={go} disabled={busy}>
+        {busy ? 'Publishing…' : 'Publish site'}
+      </button>
     </div>
   );
 }

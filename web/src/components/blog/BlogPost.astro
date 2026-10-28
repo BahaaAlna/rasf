@@ -12,6 +12,7 @@ import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../layout/Header/SiteHeader.astro';
 import PageFoot from './PageFoot.astro';
+import { getSite, getUI } from '../../lib/content';
 import { getBlog, postPath, slugOf, readingMinutes, formatDate, type Post } from '../../lib/blog';
 import { localizePath, otherLocale, type Locale } from '../../lib/i18n';
 
@@ -24,6 +25,7 @@ interface Props {
 
 const { locale, post, translated } = Astro.props;
 const copy = getBlog(locale);
+const home = { name: getSite(locale).name, path: '/' };
 const { Content } = await render(post);
 
 const path = postPath(slugOf(post));
@@ -38,6 +40,8 @@ const minutes = readingMinutes(post).toLocaleString(locale === 'ar' ? 'ar-EG' : 
   description={post.data.description}
   translated={translated}
   ogType="article"
+  trail={[home, { name: getUI(locale).nav.blog, path: '/blog' }]}
+  kind={{ type: 'article', published: post.data.date }}
 >
   <SiteHeader slot="header" locale={locale} switchHref={switchHref} />
 
