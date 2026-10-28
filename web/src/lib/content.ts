@@ -21,6 +21,7 @@ import { services } from '../data/services';
 import { about, TOOLS } from '../data/about';
 import { contact } from '../data/contact';
 import { blog } from '../data/blog';
+import { maintenance } from '../data/maintenance';
 
 type Values = Record<string, unknown>;
 
@@ -133,6 +134,14 @@ export function getContact(locale: Locale) {
 }
 
 export type ContactSection = ReturnType<typeof getContact>;
+
+/** Whether the site is in maintenance mode, and what it says meanwhile. */
+export function getMaintenance(locale: Locale) {
+  return {
+    on: shared('maintenance', 'on', maintenance.on) === true,
+    ...words('maintenance', maintenance, locale),
+  };
+}
 
 /** The blog's own words, around the posts (the posts are in lib/blog.ts). */
 export function getBlogCopy(locale: Locale) {

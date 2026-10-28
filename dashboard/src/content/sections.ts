@@ -20,6 +20,7 @@ import { services } from '../../../web/src/data/services';
 import { about, TOOLS } from '../../../web/src/data/about';
 import { contact } from '../../../web/src/data/contact';
 import { blog } from '../../../web/src/data/blog';
+import { maintenance } from '../../../web/src/data/maintenance';
 
 /** A deep copy, so editing never touches the imported originals. */
 const copy = <T>(value: T): T => structuredClone(value);
@@ -309,6 +310,26 @@ export const SECTIONS: Section[] = [
     ],
     current: () => both(blog),
   },
+  {
+    id: 'maintenance',
+    title: 'Maintenance mode',
+    description: 'While it’s on, every page of the site shows only a short note: that you’ll be back, and the email.',
+    shared: [
+      {
+        kind: 'switch',
+        key: 'on',
+        label: 'Site under maintenance',
+        hint: 'Takes effect when you save, then publish. Switch it off and publish again to bring the site back; nothing is lost.',
+      },
+    ],
+    words: [
+      text('title', 'Heading', { hint: 'A full stop at the end turns blue.' }),
+      text('message', 'Message', { long: true }),
+      text('reach', 'Before the email', { hint: 'The studio’s email follows it, from Site.' }),
+    ],
+    current: () => ({ ...both({ ar: maintenance.ar, en: maintenance.en }), on: maintenance.on }),
+  },
 ];
+
 
 export const sectionById = (id: string) => SECTIONS.find((s) => s.id === id);

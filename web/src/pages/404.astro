@@ -1,0 +1,149 @@
+---
+/*
+  Where any address that isn't a page lands. Hosts serve this one file
+  for every missing page in either language, so it speaks both: Arabic
+  first, as the site does, then English, each with its way home.
+
+  Without it, Cloudflare Pages would answer every wrong address with the
+  home page, which reads to search engines as endless copies of it.
+*/
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/layout/Header/SiteHeader.astro';
+import PageFoot from '../components/blog/PageFoot.astro';
+---
+
+<BaseLayout path="/404" title="٤٠٤" translated={false}>
+  <meta slot="head" name="robots" content="noindex" />
+  <SiteHeader slot="header" locale="ar" switchHref="/en/" />
+
+  <section class="lost u-wrap" aria-labelledby="lost-title">
+    <p class="lost__code u-mono" aria-hidden="true">404</p>
+
+    <div class="lost__langs">
+      <div class="lost__lang" lang="ar" dir="rtl">
+        <h1 id="lost-title" class="lost__title">
+          لا شيء هنا<span class="lost__dot">.</span>
+        </h1>
+        <p class="lost__text">هذه الصفحة غير موجودة، أو انتقلت إلى مكان آخر.</p>
+        <a class="lost__home" href="/" data-weightless>
+          <span data-weightless-label>إلى الصفحة الرئيسية</span>
+        </a>
+      </div>
+
+      <div class="lost__lang" lang="en" dir="ltr">
+        <p class="lost__title">
+          Nothing here<span class="lost__dot">.</span>
+        </p>
+        <p class="lost__text">This page doesn’t exist, or it has moved.</p>
+        <a class="lost__home lost__home--quiet" href="/en/" data-weightless>
+          <span data-weightless-label>Back to the home page</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <PageFoot slot="footer" locale="ar" />
+</BaseLayout>
+
+<style>
+  .lost {
+    padding-block-start: var(--space-2xl);
+  }
+
+  .lost__code {
+    font-size: clamp(5rem, 3rem + 14vw, 14rem);
+    line-height: 0.85;
+    letter-spacing: -0.04em;
+    color: color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+
+  .lost__langs {
+    display: grid;
+    gap: var(--space-2xl);
+    margin-block-start: var(--space-xl);
+  }
+
+  @media (min-width: 56rem) {
+    .lost__langs {
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+    }
+  }
+
+  .lost__lang {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-md);
+    padding-block-start: var(--space-md);
+    border-block-start: 1px solid var(--ink);
+  }
+
+  .lost__title {
+    font-family: var(--font-display-en);
+    font-size: var(--step-3);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  .lost__lang:lang(ar) .lost__title {
+    font-family: var(--font-display-ar);
+    font-size: calc(var(--step-3) * 1.15);
+    line-height: var(--ar-leading);
+    letter-spacing: 0;
+  }
+
+  .lost__dot {
+    color: var(--accent);
+  }
+
+  .lost__text {
+    font-family: var(--font-display-en);
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+
+  .lost__lang:lang(ar) .lost__text {
+    font-family: var(--font-display-ar);
+    font-size: calc(var(--step-1) * var(--ar-scale));
+    line-height: calc(1.45 * var(--ar-leading));
+  }
+
+  .lost__home {
+    display: inline-block;
+    margin-block-start: var(--space-sm);
+    padding: var(--space-sm) var(--space-lg);
+    font-family: var(--font-display-en);
+    color: var(--paper);
+    background: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: var(--radius-pill);
+    transition:
+      background var(--dur-base) var(--ease-out-power4),
+      border-color var(--dur-base) var(--ease-out-power4),
+      color var(--dur-base) var(--ease-out-power4);
+  }
+
+  .lost__lang:lang(ar) .lost__home {
+    font-family: var(--font-display-ar);
+    font-size: calc(var(--step-0) * var(--ar-scale));
+  }
+
+  .lost__home:hover,
+  .lost__home:focus-visible {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .lost__home--quiet {
+    color: var(--ink);
+    background: none;
+    border-color: var(--rule);
+  }
+
+  .lost__home--quiet:hover,
+  .lost__home--quiet:focus-visible {
+    color: var(--paper);
+  }
+</style>

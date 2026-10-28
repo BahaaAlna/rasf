@@ -1,0 +1,139 @@
+---
+/*
+  What every page shows while the site is in maintenance mode, in place
+  of its header, content and footer (see BaseLayout): the name with its
+  dot, that we'll be back, and the email for anything that can't wait.
+  A way to the same note in the other language, and nothing else.
+*/
+import { getMaintenance, getSite, getUI } from '../../lib/content';
+import { localizePath, otherLocale, type Locale } from '../../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const site = getSite(locale);
+const ui = getUI(locale);
+const note = getMaintenance(locale);
+const other = otherLocale(locale);
+
+// The closing full stop takes the accent, as it does across the site.
+const title = note.title.trim();
+const stop = title.endsWith('.');
+const titleText = stop ? title.slice(0, -1) : title;
+---
+
+<main id="main" class="pause u-wrap">
+  <header class="pause__bar">
+    <p class="pause__name">{site.name}<span class="pause__dot">.</span></p>
+    <a class="pause__switch u-mono" href={localizePath('/', other)} hreflang={other} lang={other}>{ui.switchTo}</a>
+  </header>
+
+  <div class="pause__body">
+    <h1 class="pause__title">
+      {titleText}{stop && <span class="pause__dot">.</span>}
+    </h1>
+    <p class="pause__message">{note.message}</p>
+    {
+      site.email && (
+        <p class="pause__reach">
+          {note.reach}{' '}
+          <a href={`mailto:${site.email}`} dir="ltr">
+            {site.email}
+          </a>
+        </p>
+      )
+    }
+  </div>
+</main>
+
+<style>
+  .pause {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-block-size: 100svh;
+    padding-block: var(--space-lg) var(--space-2xl);
+  }
+
+  .pause__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+  }
+
+  .pause__name {
+    font-size: var(--step-1);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  .pause__dot {
+    color: var(--accent);
+  }
+
+  .pause__switch {
+    padding: var(--space-2xs) var(--space-md);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-pill);
+    transition:
+      background var(--dur-base) var(--ease-out-power4),
+      color var(--dur-base) var(--ease-out-power4);
+  }
+
+  .pause__switch:hover,
+  .pause__switch:focus-visible {
+    color: var(--paper);
+    background: var(--ink);
+  }
+
+  .pause__body {
+    align-self: center;
+    display: grid;
+    gap: var(--space-lg);
+    padding-block-start: var(--space-2xl);
+  }
+
+  .pause__title {
+    font-size: var(--step-5);
+    line-height: 0.9;
+    letter-spacing: -0.045em;
+    color: var(--ink);
+  }
+
+  :global([dir='rtl']) .pause__title {
+    font-size: calc(var(--step-5) * 0.95);
+    line-height: var(--ar-leading);
+    letter-spacing: 0;
+  }
+
+  .pause__message {
+    max-inline-size: 36ch;
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+
+  :global([dir='rtl']) .pause__message {
+    font-size: calc(var(--step-1) * var(--ar-scale));
+    line-height: calc(1.45 * var(--ar-leading));
+  }
+
+  .pause__reach {
+    color: var(--ink);
+  }
+
+  .pause__reach a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 0.18em;
+  }
+
+  .pause__reach a:hover {
+    color: var(--accent);
+  }
+</style>

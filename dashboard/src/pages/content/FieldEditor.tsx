@@ -45,6 +45,17 @@ export default function FieldEditor({ field, value, onChange, lang }: Props) {
       );
     }
 
+    case 'switch':
+      return (
+        <div className="field">
+          <label className="toggle">
+            <input type="checkbox" checked={value === true} onChange={(e) => onChange(e.target.checked)} />
+            <span>{field.label}</span>
+          </label>
+          {hint}
+        </div>
+      );
+
     case 'choice':
       return (
         <label className="field field--short">

@@ -1187,3 +1187,77 @@ textarea:lang(ar) {
   margin-block-start: var(--space-sm);
   border-block-start: 1px solid var(--rule);
 }
+
+/* ---- Publishing ----------------------------------------------------- */
+
+.publish {
+  display: grid;
+  gap: var(--space-xs);
+  margin-block-start: auto;
+  padding-block-start: var(--space-md);
+  border-block-start: 1px solid var(--rule);
+}
+
+.publish__button {
+  gap: var(--space-xs);
+}
+
+/* Grey when everything's live; the accent when there's something to publish. */
+.publish__dot {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--paper) 45%, transparent);
+}
+
+.publish__dot--pending {
+  background: var(--paper);
+  box-shadow: 0 0 0 0.2rem var(--accent);
+}
+
+.publish__note {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.publish__note--problem {
+  color: var(--danger);
+}
+
+/* The account sits under the publish button now, no longer pushed down itself. */
+.publish + .side__account {
+  margin-block-start: var(--space-md);
+}
+
+.side__settings {
+  text-transform: none;
+}
+
+.side__settings:hover,
+.side__settings.active {
+  color: var(--ink);
+}
+
+/*
+  On a wide screen the sidebar is the screen's height: the list of
+  sections scrolls on its own, so Publish and the account below it are
+  always in view, however many sections there are.
+*/
+@media (min-width: 50rem) {
+  .side {
+    overflow: hidden;
+  }
+
+  .side__nav {
+    flex: 1;
+    min-block-size: 0;
+    overflow-y: auto;
+    /* Room for the scrollbar without it touching the words. */
+    padding-inline-end: var(--space-xs);
+    margin-inline-end: calc(var(--space-xs) * -1);
+  }
+
+  .publish {
+    margin-block-start: 0;
+  }
+}

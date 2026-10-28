@@ -4,7 +4,8 @@ import SmoothScroll from '../components/layout/SmoothScroll';
 import Cursor from '../components/layout/Cursor/Cursor';
 import ScrollBar from '../components/layout/ScrollBar/ScrollBar';
 import { getLocale, dirFor, localizePath, locales, type Locale } from '../lib/i18n';
-import { getSite } from '../lib/content';
+import Maintenance from '../components/layout/Maintenance.astro';
+import { getMaintenance, getSite } from '../lib/content';
 import '../styles/global.css';
 
 interface Props {
@@ -24,6 +25,8 @@ interface Props {
 const locale: Locale = getLocale(Astro.url);
 const dir = dirFor(locale);
 const content = getSite(locale);
+/** In maintenance mode every page shows only the maintenance note. */
+const paused = getMaintenance(locale).on;
 
 const {
   title,
@@ -107,11 +110,19 @@ const ogImage = new URL('/og-default.png', Astro.site ?? content.url);
     <SmoothScroll client:idle />
     <ScrollBar client:idle />
     <Cursor client:idle />
-    <slot name="header" />
-    <main id="main">
-      <slot />
-    </main>
-    <slot name="footer" />
+    {
+      paused ? (
+        <Maintenance locale={locale} />
+      ) : (
+        <>
+          <slot name="header" />
+          <main id="main">
+            <slot />
+          </main>
+          <slot name="footer" />
+        </>
+      )
+    }
 
     <script>
       // One observer for every [data-reveal] on the page. Cheaper than

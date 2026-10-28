@@ -8,6 +8,7 @@ import PostsList from './pages/posts/PostsList';
 import PostEditor from './pages/posts/PostEditor';
 import SectionEditor from './pages/content/SectionEditor';
 import Messages from './pages/Messages';
+import Settings from './pages/Settings';
 
 /*
   Every screen sits behind the same gate: someone must be signed in, and
@@ -45,6 +46,7 @@ export default function App() {
         <Route index element={<Overview />} />
         <Route path="content/:id" element={<SectionEditor />} />
         <Route path="messages" element={<Messages />} />
+        <Route path="settings" element={<Settings />} />
         <Route path="posts" element={<PostsList />} />
         <Route path="posts/new" element={<PostEditor />} />
         <Route path="posts/:slug" element={<PostEditor />} />

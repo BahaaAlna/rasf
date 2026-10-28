@@ -3,12 +3,13 @@ import { useAuth } from '../auth/AuthProvider';
 import { SECTIONS } from '../content/sections';
 import { useMessages } from '../lib/messages';
 import Wordmark from './Wordmark';
+import PublishButton from './PublishButton';
 
 /*
   The frame around every signed-in screen: the overview and messages,
   every section of the site in page order, then the blog's posts; the
-  account at the foot; the screen itself beside. Messages carries a count
-  of the unread ones, kept live.
+  publish button and the account at the foot; the screen itself beside.
+  Messages carries a count of the unread ones, kept live.
 */
 export default function Shell() {
   const { state, signOut } = useAuth();
@@ -41,8 +42,12 @@ export default function Shell() {
             Posts
           </NavLink>
         </nav>
+        <PublishButton email={email ?? ''} />
         <div className="side__account">
           <p className="mono side__email">{email}</p>
+          <NavLink to="/settings" className="side__settings mono">
+            Settings
+          </NavLink>
           <button className="button button--quiet" type="button" onClick={signOut}>
             Sign out
           </button>

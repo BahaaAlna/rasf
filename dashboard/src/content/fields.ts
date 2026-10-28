@@ -12,6 +12,8 @@ export type Field =
   /** One line of text, or several with `long`. `ltr` for addresses, links and the like. */
   | { kind: 'text'; key: string; label: string; hint?: string; long?: boolean; ltr?: boolean }
   | { kind: 'number'; key: string; label: string; hint?: string; step?: number }
+  /** On or off, drawn as the dot switch. */
+  | { kind: 'switch'; key: string; label: string; hint?: string }
   /** One of a few fixed values, e.g. which page a project is listed on. */
   | { kind: 'choice'; key: string; label: string; hint?: string; options: { value: string; label: string }[] }
   /**
@@ -60,6 +62,8 @@ export function blank(field: Field): unknown {
       return 0;
     case 'icon':
       return null;
+    case 'switch':
+      return false;
     case 'choice':
       return field.options[0]?.value ?? '';
     case 'lines':

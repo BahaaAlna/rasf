@@ -48,6 +48,12 @@ service cloud.firestore {
         && m.read == false;
     }
 
+    // The dashboard's own settings: the deploy hook the Publish button
+    // calls, and when it last did. Admins only; the hook is a secret.
+    match /settings/{id} {
+      allow read, write: if isAdmin();
+    }
+
     match /posts/{slug} {
       // Anyone may read a published post (the website builds from these);
       // drafts only admins.
