@@ -1,0 +1,63 @@
+---
+/*
+  The slim strip that closes a page other than home — the same one the
+  Contact section ends with there.
+*/
+import { getContact, getSite } from '../../lib/content';
+import type { Locale } from '../../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const site = getSite(locale);
+const { foot } = getContact(locale);
+const year = new Date().getFullYear().toLocaleString(locale === 'ar' ? 'ar-EG' : 'en', { useGrouping: false });
+---
+
+<footer class="foot">
+  <div class="foot__inner u-wrap">
+    <p class="u-mono">© {year} {site.name} · {foot.rights}</p>
+    <a class="foot__top u-mono" href="#main">
+      {foot.top}
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 20V5M6 11l6-6 6 6"></path>
+      </svg>
+    </a>
+  </div>
+</footer>
+
+<style>
+  .foot {
+    margin-block-start: var(--space-3xl);
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .foot__inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-sm) var(--space-lg);
+    padding-block: var(--space-lg);
+  }
+
+  .foot__top {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--ink);
+  }
+
+  .foot__top:hover {
+    color: var(--accent);
+  }
+
+  .foot__top svg {
+    inline-size: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+</style>

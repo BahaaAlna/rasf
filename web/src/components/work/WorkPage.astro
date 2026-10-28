@@ -1,0 +1,152 @@
+---
+/*
+  One of the two pages under Work, Software or Designs, once for both
+  languages: its name set large with the accent dot, a line about what's
+  here, a switch to the other page, then the projects of its kind. The
+  header's Work menu leads here.
+
+  How the projects are laid out is a draft, one per component in
+  ./drafts, so several can be tried side by side: change DRAFT to show
+  another. A is a zigzag of pictures and words, joined by a line.
+*/
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../layout/Header/SiteHeader.astro';
+import PageFoot from '../blog/PageFoot.astro';
+import DraftA from './drafts/DraftA.astro';
+import { getUI, getWork } from '../../lib/content';
+import { localizePath, otherLocale, type Locale } from '../../lib/i18n';
+import type { WorkCategory } from '../../data/work';
+
+interface Props {
+  locale: Locale;
+  category: WorkCategory;
+}
+
+/** The layouts being tried for the projects; DRAFT is the one shown. */
+const DRAFTS = { A: DraftA } as const;
+const DRAFT: keyof typeof DRAFTS = 'A';
+const Projects = DRAFTS[DRAFT];
+
+const { locale, category } = Astro.props;
+const ui = getUI(locale);
+const work = getWork(locale);
+
+/** Each page's address, its name, and the line under it. */
+const PAGES = {
+  software: { path: '/work/software', title: ui.workPages.software, intro: work.softwareIntro },
+  design: { path: '/work/designs', title: ui.workPages.designs, intro: work.designsIntro },
+} as const;
+
+const page = PAGES[category];
+const projects = work.projects.filter((project) => project.category === category);
+---
+
+<BaseLayout path={page.path} title={page.title} description={page.intro}>
+  <SiteHeader slot="header" locale={locale} switchHref={localizePath(page.path, otherLocale(locale))} />
+
+  <section class="page u-wrap" aria-labelledby="page-title">
+    <a class="page__up u-mono" href={`${localizePath('/', locale)}#work`}>{ui.nav.work}</a>
+    <h1 id="page-title" class="page__title" data-reveal>
+      {page.title}<span class="page__dot">.</span>
+    </h1>
+    <p class="page__intro" data-reveal style="--reveal-delay: 0.06s">{page.intro}</p>
+
+    <nav class="switch" aria-label={ui.nav.work} data-reveal style="--reveal-delay: 0.1s">
+      {
+        (Object.keys(PAGES) as WorkCategory[]).map((key) => (
+          <a
+            class="switch__link"
+            href={localizePath(PAGES[key].path, locale)}
+            aria-current={key === category ? 'page' : undefined}
+          >
+            {PAGES[key].title}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="page__list">
+      {projects.length > 0 ? <Projects locale={locale} projects={projects} /> : <p class="u-mono">{work.empty}</p>}
+    </div>
+  </section>
+
+  <PageFoot slot="footer" locale={locale} />
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block-start: var(--space-xl);
+  }
+
+  .page__up {
+    color: var(--ink);
+    transition: color var(--dur-base) var(--ease-out-power3);
+  }
+
+  .page__up:hover,
+  .page__up:focus-visible {
+    color: var(--accent);
+  }
+
+  .page__title {
+    margin-block-start: var(--space-2xl);
+    font-size: var(--step-4);
+    letter-spacing: -0.04em;
+    color: var(--ink);
+  }
+
+  :global([dir='rtl']) .page__title {
+    font-size: calc(var(--step-4) * 1.1);
+    letter-spacing: 0;
+  }
+
+  .page__dot {
+    color: var(--accent);
+  }
+
+  .page__intro {
+    max-inline-size: 44ch;
+    margin-block-start: var(--space-lg);
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+
+  :global([dir='rtl']) .page__intro {
+    font-size: calc(var(--step-1) * var(--ar-scale));
+    line-height: calc(1.45 * var(--ar-leading));
+  }
+
+  /* The two pages as pills; the one you're on is filled. */
+  .switch {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-block-start: var(--space-xl);
+  }
+
+  .switch__link {
+    padding: var(--space-xs) var(--space-md);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-pill);
+    transition:
+      background var(--dur-base) var(--ease-out-power4),
+      color var(--dur-base) var(--ease-out-power4),
+      border-color var(--dur-base) var(--ease-out-power4);
+  }
+
+  .switch__link:hover {
+    border-color: var(--ink);
+  }
+
+  .switch__link[aria-current='page'] {
+    color: var(--paper);
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .page__list {
+    margin-block-start: var(--space-2xl);
+  }
+</style>

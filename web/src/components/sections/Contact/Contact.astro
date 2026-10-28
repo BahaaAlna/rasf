@@ -1,0 +1,651 @@
+---
+/*
+  Contact: the last section, and where every "Start a project" button on
+  the page lands. A big invitation, the direct way in — the email, with a
+  button to copy it — and a short project form beside it. A slim strip
+  closes the page.
+
+  The form sends straight to the dashboard's Messages (`contact.ts` saves
+  it in Firestore), and says under the button whether it went. A field
+  hidden from people, and offered to bots, catches spam. The lengths
+  match what the security rules accept. See data/contact.ts.
+
+  At the start edge of the screen, on a wide screen, a faint wheel turns:
+  the logotype repeated round its rim, bent to the curve, the hub far out
+  past the edge so only an arc of it shows. It starts just under the
+  location line (contact.ts measures where that is), and the logotypes
+  come in at its top, sweep along the arc and leave at the bottom. Pure CSS; it holds
+  still for anyone who asks for less motion.
+
+  A hairline across the top, full width, like the sections before About.
+*/
+import type { ContactSection } from '../../../lib/content';
+import type { Locale } from '../../../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  /** The section's heading — the nav's own word for it. */
+  title: string;
+  copy: ContactSection;
+  site: { name: string; email: string; location: string };
+  /** The logotype for the wheel. */
+  logo: { src: string; width: number | string; height: number | string };
+  /** What can be asked for: the Services titles, in their order. */
+  needs: string[];
+}
+
+const { locale, title, copy, site, logo, needs } = Astro.props;
+
+/**
+ * Logotypes round the wheel's rim. With the logotype's size, this sets the
+ * radius: more copies, a gentler curve — gentle enough here that the arc
+ * stays on screen the whole height of the section.
+ */
+const COPIES = 15;
+/**
+ * Strips each copy is cut into. A whole number per copy, so every strip
+ * knows exactly which slice of its logotype it shows; more is smoother.
+ */
+const PER_COPY = 12;
+const STRIPS = COPIES * PER_COPY;
+const strips = Array.from({ length: STRIPS }, (_, i) => i);
+const logoRatio = Number(logo.height) / Number(logo.width);
+
+// The closing full stop takes the accent, as it does in the manifesto.
+const heading = copy.heading.trim();
+const stop = heading.endsWith('.');
+const headingText = stop ? heading.slice(0, -1) : heading;
+
+const year = new Date().getFullYear().toLocaleString(locale === 'ar' ? 'ar-EG' : 'en', { useGrouping: false });
+const { form } = copy;
+---
+
+<section id="contact" class="contact" aria-labelledby="contact-title">
+  <div
+    class="wheel"
+    aria-hidden="true"
+    style={`--logo: url(${logo.src}); --ratio: ${logoRatio}; --copies: ${COPIES}; --per-copy: ${PER_COPY}`}
+  >
+    <div class="wheel__hub">
+      {strips.map((i) => <span class="wheel__strip" style={`--i: ${i}; --j: ${i % PER_COPY}`} />)}
+    </div>
+  </div>
+
+  <div class="u-wrap">
+    <h2 id="contact-title" class="u-mono" data-reveal>{title}</h2>
+    <p class="contact__heading" data-reveal style="--reveal-delay: 0.06s">
+      {headingText}{stop && <span class="contact__dot">.</span>}
+    </p>
+    <p class="contact__intro" data-reveal style="--reveal-delay: 0.12s">{copy.intro}</p>
+
+    <div class="contact__body">
+      <div class="direct" data-reveal>
+        <p class="u-mono">{copy.direct.emailLabel}</p>
+        <div class="direct__mail">
+          <a class="direct__email" href={`mailto:${site.email}`} dir="ltr">{site.email}</a>
+          <button
+            class="direct__copy u-mono"
+            type="button"
+            data-copy={site.email}
+            data-copied-text={copy.direct.copied}
+          >
+            {copy.direct.copy}
+          </button>
+        </div>
+        <p class="direct__based" data-wheel-start>{site.location}<span class="contact__dot">.</span></p>
+      </div>
+
+      <form
+        class="brief"
+        data-brief
+        data-locale={locale}
+        data-sending={form.sending}
+        data-sent={form.sent}
+        data-failed={form.failed.replace('{email}', site.email)}
+        data-reveal
+        style="--reveal-delay: 0.08s"
+        novalidate
+      >
+        <div class="brief__pair">
+          <label class="field">
+            <span class="u-mono">{form.name}</span>
+            <input
+              name="name"
+              type="text"
+              autocomplete="name"
+              placeholder={form.namePlaceholder}
+              maxlength="200"
+              required
+            />
+          </label>
+          <label class="field">
+            <span class="u-mono">{form.email}</span>
+            <input
+              name="email"
+              type="email"
+              autocomplete="email"
+              placeholder={form.emailPlaceholder}
+              dir="ltr"
+              maxlength="320"
+              required
+            />
+          </label>
+        </div>
+
+        <fieldset class="choices">
+          <legend class="u-mono">{form.need}</legend>
+          <div class="choices__set">
+            {
+              [...needs, ...form.otherNeeds].map((need) => (
+                <label class="chip">
+                  <input type="checkbox" name="need" value={need} />
+                  <span>{need}</span>
+                </label>
+              ))
+            }
+          </div>
+        </fieldset>
+
+        <label class="field">
+          <span class="u-mono">{form.message}</span>
+          <textarea name="message" rows="4" placeholder={form.messagePlaceholder} maxlength="5000"></textarea>
+        </label>
+
+        <!-- Hidden from people, and from screen readers; bots fill it in. -->
+        <label class="brief__trap" aria-hidden="true">
+          Website
+          <input name="website" type="text" tabindex="-1" autocomplete="off" />
+        </label>
+
+        <div class="brief__send">
+          <button class="send" type="submit" data-weightless>
+            <span class="send__label" data-weightless-label>
+              {form.send}
+              <svg class="u-flip" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 12h15M13 6l6 6-6 6"></path>
+              </svg>
+            </span>
+          </button>
+          <p class="brief__note">{form.note}</p>
+          <p class="brief__status" data-status role="status" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="foot__inner u-wrap">
+      <p class="u-mono">© {year} {site.name} · {copy.foot.rights}</p>
+      <a class="foot__top u-mono" href="#main">
+        {copy.foot.top}
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 20V5M6 11l6-6 6 6"></path>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initContact } from './contact';
+
+  document.addEventListener('astro:page-load', initContact);
+</script>
+
+<style>
+  .contact {
+    position: relative;
+    /* The wheel sits behind everything here, and no wider than the page. */
+    isolation: isolate;
+    overflow-x: clip;
+    border-block-start: 1px solid var(--rule);
+    padding-block-start: var(--space-2xl);
+  }
+
+  /* ---- The invitation ------------------------------------------------- */
+
+  .contact__heading {
+    margin-block-start: var(--space-lg);
+    font-size: var(--step-4);
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  :global([dir='rtl']) .contact__heading {
+    /* The full Arabic scale on --step-4 lands far too large; a lighter
+       boost sits level with the Latin line. */
+    font-size: calc(var(--step-4) * 1.1);
+    line-height: calc(0.92 * var(--ar-leading));
+    letter-spacing: 0;
+  }
+
+  .contact__dot {
+    color: var(--accent);
+  }
+
+  .contact__intro {
+    max-inline-size: 40ch;
+    margin-block-start: var(--space-lg);
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+
+  :global([dir='rtl']) .contact__intro {
+    font-size: calc(var(--step-1) * var(--ar-scale));
+    line-height: calc(1.45 * var(--ar-leading));
+  }
+
+  /* Direct on the start side, the form beside it on a wide screen. */
+  .contact__body {
+    display: grid;
+    gap: var(--space-2xl);
+    margin-block: var(--space-2xl) var(--space-3xl);
+  }
+
+  @media (min-width: 60rem) {
+    .contact__body {
+      grid-template-columns: 5fr 7fr;
+      align-items: start;
+    }
+  }
+
+  /* ---- Direct --------------------------------------------------------- */
+
+  .direct {
+    display: grid;
+    gap: var(--space-sm);
+    padding-block-start: var(--space-md);
+    border-block-start: 1px solid var(--ink);
+  }
+
+  .direct__mail {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-sm) var(--space-md);
+  }
+
+  .direct__email {
+    font-size: var(--step-2);
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--rule);
+    text-underline-offset: 0.18em;
+    transition: text-decoration-color var(--dur-base) var(--ease-out-power3);
+    overflow-wrap: anywhere;
+  }
+
+  .direct__email:hover,
+  .direct__email:focus-visible {
+    text-decoration-color: var(--accent);
+  }
+
+  .direct__copy {
+    padding: var(--space-2xs) var(--space-sm);
+    color: var(--ink);
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition:
+      background var(--dur-base) var(--ease-out-power4),
+      color var(--dur-base) var(--ease-out-power4);
+  }
+
+  .direct__copy:hover,
+  .direct__copy:focus-visible {
+    color: var(--paper);
+    background: var(--ink);
+  }
+
+  .direct__copy[data-done] {
+    color: var(--paper);
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .direct__based {
+    color: var(--ink);
+  }
+
+  /* ---- The wheel ------------------------------------------------------ */
+
+  /*
+    The rim holds --copies logotypes, each with a gap after it, so the
+    pattern meets itself all the way round. Each copy is cut into
+    --per-copy short strips: strip --i is slice --j of its own copy,
+    counted in whole numbers so no strip ever misses its slice. Each is
+    turned to its own angle
+    round the hub and pushed out by the radius: that is what bends the
+    logotype to the curve. The radius follows from the circumference.
+
+    The logotype runs clockwise round the rim. On the inner side of a
+    hub past the right edge (Arabic) that reads upward, so ر is at the
+    top; past the left edge (English) it reads downward, R at the top.
+    Either way the wheel turns so the logotypes travel down the page.
+  */
+  .wheel {
+    /* No percentages: these set the strip sizes and the hub's place. */
+    --w: 12rem;
+    --h: calc(var(--w) * var(--ratio));
+    /* One logotype and the gap after it. */
+    --period: calc(var(--w) * 1.4);
+    --round: calc(var(--period) * var(--copies));
+    --sl: calc(var(--period) / var(--per-copy));
+    --step: calc(360deg / (var(--copies) * var(--per-copy)));
+    /* circumference / 2π */
+    --r: calc(var(--round) / 6.28318);
+    /* How far the rim reaches in from the edge of the screen. */
+    --reach: clamp(9rem, 11vw, 13rem);
+    --dir: 1;
+
+    position: absolute;
+    z-index: -1;
+    inset-block: var(--wheel-top, 0) 0;
+    inset-inline-start: 0;
+    display: none;
+    inline-size: calc(var(--reach) + var(--h));
+    overflow: clip;
+    opacity: 0.14;
+    pointer-events: none;
+    /* Fade in just under the line, and out toward the end of the page. */
+    mask-image: linear-gradient(transparent, #000 10%, #000 85%, transparent);
+  }
+
+  :global([dir='rtl']) .wheel {
+    --dir: -1;
+  }
+
+  /* Only on a wide screen, where the edge has room to spare. */
+  @media (min-width: 60rem) {
+    .wheel {
+      display: block;
+    }
+  }
+
+  /* A point at the hub, out past the edge by the radius less the reach. */
+  .wheel__hub {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: calc(var(--reach) - var(--r));
+    animation: wheel-turn 90s linear infinite;
+  }
+
+  .wheel__strip {
+    position: absolute;
+    /* Centred on the hub, before being turned and pushed out. */
+    inset-inline-start: calc(var(--sl) / -2);
+    inset-block-start: calc(var(--h) / -2);
+    /* A touch longer than the slice: the strips fan apart on the outer
+       side of the rim, and this keeps any seam from showing there. */
+    inline-size: calc(var(--sl) + 2px);
+    block-size: var(--h);
+    /* This strip's slice of its copy; past the logotype's end it falls
+       in the gap, and shows nothing. */
+    background-image: var(--logo);
+    background-repeat: no-repeat;
+    background-size: var(--w) var(--h);
+    background-position: calc(var(--j) * var(--sl) * -1) 0;
+    transform: rotate(calc(var(--i) * var(--step))) translateY(calc(var(--r) * -1));
+  }
+
+  /* Physical sides: the strips are laid out left to right in both languages. */
+  :global([dir='rtl']) .wheel__strip {
+    inset-inline-start: auto;
+    left: calc(var(--sl) / -2);
+  }
+
+  @keyframes wheel-turn {
+    to {
+      transform: rotate(calc(360deg * var(--dir)));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wheel__hub {
+      animation: none;
+    }
+  }
+
+  /* ---- The form ------------------------------------------------------- */
+
+  .brief {
+    display: grid;
+    gap: var(--space-lg);
+    padding-block-start: var(--space-md);
+    border-block-start: 1px solid var(--ink);
+  }
+
+  .brief__pair {
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  @media (min-width: 40rem) {
+    .brief__pair {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .field {
+    display: grid;
+    gap: var(--space-xs);
+  }
+
+  /* Underlined fields: a line to write on, not a box to fill. */
+  .field input,
+  .field textarea {
+    inline-size: 100%;
+    padding-block: var(--space-xs);
+    color: var(--ink);
+    background: none;
+    border: 0;
+    border-block-end: 1px solid var(--rule);
+    border-radius: 0;
+    resize: vertical;
+    transition: border-color var(--dur-base) var(--ease-out-power3);
+  }
+
+  .field input::placeholder,
+  .field textarea::placeholder {
+    color: color-mix(in srgb, var(--ink-muted) 70%, transparent);
+  }
+
+  /* Under the pointer the line turns black; while typing, the accent. */
+  .field input:hover,
+  .field textarea:hover {
+    border-block-end-color: var(--ink);
+  }
+
+  .field input:focus,
+  .field textarea:focus {
+    outline: none;
+    border-block-end-color: var(--accent);
+  }
+
+  /* Marked only once someone has tried to send it. The palette has no
+     error colour, and the accent already means "this way"; a plain red
+     reads as "fix this" without borrowing either. */
+  .brief[data-tried] .field input:invalid {
+    border-block-end-color: #c0392b;
+  }
+
+  .choices {
+    display: grid;
+    gap: var(--space-sm);
+    padding: 0;
+    border: 0;
+  }
+
+  .choices legend {
+    padding: 0;
+    margin-block-end: var(--space-sm);
+  }
+
+  .choices__set {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  /* A choice as a pill: the real checkbox stays, only hidden. */
+  .chip {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .chip input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .chip span {
+    display: inline-block;
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--step--1);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-pill);
+    transition:
+      background var(--dur-base) var(--ease-out-power4),
+      color var(--dur-base) var(--ease-out-power4),
+      border-color var(--dur-base) var(--ease-out-power4);
+  }
+
+  :global([dir='rtl']) .chip span {
+    font-size: calc(var(--step--1) * var(--ar-scale));
+  }
+
+  .chip:hover span {
+    border-color: var(--ink);
+  }
+
+  .chip input:checked + span {
+    color: var(--paper);
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .chip input:focus-visible + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .brief__send {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-md) var(--space-lg);
+  }
+
+  /* The one solid button on the page: this is where it all leads. */
+  .send {
+    display: inline-block;
+    padding: var(--space-sm) var(--space-lg);
+    font-size: var(--step-0);
+    color: var(--paper);
+    background: var(--ink);
+    border: 0;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: background var(--dur-base) var(--ease-out-power4);
+  }
+
+  .send:hover,
+  .send:focus-visible {
+    background: var(--accent);
+  }
+
+  .send__label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .send svg,
+  .foot__top svg {
+    inline-size: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+
+  /* Off the page, not display: none, which some bots know to skip. */
+  .brief__trap {
+    position: absolute;
+    inset-inline-start: -100vw;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+  }
+
+  .brief[data-state='sending'] .send {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* While a status shows, the note under the button steps aside for it. */
+  .brief[data-state] .brief__note {
+    display: none;
+  }
+
+  .brief__status {
+    max-inline-size: 34ch;
+    font-size: var(--step--1);
+    color: var(--ink);
+  }
+
+  :global([dir='rtl']) .brief__status {
+    font-size: calc(var(--step--1) * var(--ar-scale));
+  }
+
+  .brief[data-state='sent'] .brief__status {
+    color: var(--accent);
+  }
+
+  .brief[data-state='failed'] .brief__status {
+    color: #c0392b;
+  }
+
+  .brief__note {
+    max-inline-size: 30ch;
+    font-size: var(--step--1);
+    color: var(--ink-muted);
+  }
+
+  :global([dir='rtl']) .brief__note {
+    font-size: calc(var(--step--1) * var(--ar-scale));
+  }
+
+  /* ---- The end of the page -------------------------------------------- */
+
+  .foot {
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .foot__inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-sm) var(--space-lg);
+    padding-block: var(--space-lg);
+  }
+
+  .foot__top {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--ink);
+  }
+
+  .foot__top:hover {
+    color: var(--accent);
+  }
+</style>

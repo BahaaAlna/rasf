@@ -1,6 +1,12 @@
-## Development
+## Layout
 
-When starting the dev server, use background mode:
+- `web/`: the public website (Astro). Everything below applies to it, and its commands run from inside `web/`.
+- `dashboard/`: the admin dashboard for the site's content (React + Vite + Firebase). Its commands run from inside `dashboard/`; setup is in its README.
+- `brand/`: source logo artwork, shared by both.
+
+## Development (web)
+
+When starting the dev server, run it from `web/` in background mode:
 
 ```
 astro dev --background

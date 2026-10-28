@@ -1,0 +1,287 @@
+---
+/*
+  One blog post, once for both languages. The way back to the list, the
+  title set large with its date and reading time, the description as a
+  lead, then the Markdown itself. It closes by pointing to the contact
+  form, since every page on the site ends up there.
+
+  The language switch goes to the translation when there is one, and to
+  the other language's blog when there isn't.
+*/
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../layout/Header/SiteHeader.astro';
+import PageFoot from './PageFoot.astro';
+import { getBlog, postPath, slugOf, readingMinutes, formatDate, type Post } from '../../lib/blog';
+import { localizePath, otherLocale, type Locale } from '../../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  post: Post;
+  /** Whether the same post exists in the other language. */
+  translated: boolean;
+}
+
+const { locale, post, translated } = Astro.props;
+const copy = getBlog(locale);
+const { Content } = await render(post);
+
+const path = postPath(slugOf(post));
+const other = otherLocale(locale);
+const switchHref = localizePath(translated ? path : '/blog', other);
+const minutes = readingMinutes(post).toLocaleString(locale === 'ar' ? 'ar-EG' : 'en');
+---
+
+<BaseLayout
+  path={path}
+  title={post.data.title}
+  description={post.data.description}
+  translated={translated}
+  ogType="article"
+>
+  <SiteHeader slot="header" locale={locale} switchHref={switchHref} />
+
+  <article class="article u-wrap">
+    <a class="article__back u-mono" href={localizePath('/blog', locale)}>
+      <svg class="u-flip" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 12H5M11 6l-6 6 6 6"></path>
+      </svg>
+      {copy.back}
+    </a>
+
+    <header class="article__head">
+      <h1 class="article__title" data-reveal>{post.data.title}</h1>
+      <p class="article__meta u-mono" data-reveal style="--reveal-delay: 0.06s">
+        <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date, locale)}</time>
+        <span aria-hidden="true">·</span>
+        <span>{copy.readingTime.replace('{n}', minutes)}</span>
+      </p>
+      <p class="article__lead" data-reveal style="--reveal-delay: 0.12s">{post.data.description}</p>
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <aside class="article__next">
+      <p class="u-mono">{copy.next.label}</p>
+      <a class="article__cta" href={`${localizePath('/', locale)}#contact`}>
+        {copy.next.cta}<span class="article__dot">.</span>
+      </a>
+    </aside>
+  </article>
+
+  <PageFoot slot="footer" locale={locale} />
+</BaseLayout>
+
+<style>
+  .article {
+    padding-block-start: var(--space-xl);
+  }
+
+  .article__back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--ink);
+    transition: color var(--dur-base) var(--ease-out-power3);
+  }
+
+  .article__back:hover,
+  .article__back:focus-visible {
+    color: var(--accent);
+  }
+
+  .article__back svg {
+    inline-size: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+
+  .article__head {
+    max-inline-size: 52rem;
+    margin-block-start: var(--space-2xl);
+    padding-block-end: var(--space-xl);
+    border-block-end: 1px solid var(--ink);
+  }
+
+  .article__title {
+    font-size: var(--step-4);
+    letter-spacing: -0.04em;
+    color: var(--ink);
+  }
+
+  :global([dir='rtl']) .article__title {
+    font-size: calc(var(--step-4) * 1.1);
+    letter-spacing: 0;
+  }
+
+  .article__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-block-start: var(--space-lg);
+  }
+
+  .article__lead {
+    margin-block-start: var(--space-lg);
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+
+  :global([dir='rtl']) .article__lead {
+    font-size: calc(var(--step-1) * var(--ar-scale));
+    line-height: calc(1.45 * var(--ar-leading));
+  }
+
+  /* ---- The Markdown --------------------------------------------------- */
+
+  .prose {
+    max-inline-size: var(--measure);
+    margin-block-start: var(--space-xl);
+    /* A step up from the page's body text: this is for reading. */
+    font-size: calc(var(--step-0) * 1.12);
+  }
+
+  :global([dir='rtl']) .prose {
+    font-size: calc(var(--step-0) * 1.12 * var(--ar-scale));
+  }
+
+  .prose > :global(* + *) {
+    margin-block-start: var(--space-md);
+  }
+
+  .prose :global(h2),
+  .prose :global(h3) {
+    color: var(--ink);
+  }
+
+  .prose > :global(h2) {
+    margin-block-start: var(--space-xl);
+    font-size: var(--step-2);
+  }
+
+  .prose > :global(h3) {
+    margin-block-start: var(--space-lg);
+    font-size: var(--step-1);
+  }
+
+  :global([dir='rtl']) .prose > :global(h2) {
+    font-size: calc(var(--step-2) * var(--ar-scale));
+  }
+
+  :global([dir='rtl']) .prose > :global(h3) {
+    font-size: calc(var(--step-1) * var(--ar-scale));
+  }
+
+  /* The reset strips list markers; prose wants them back. */
+  .prose :global(ul),
+  .prose :global(ol) {
+    padding-inline-start: 1.25em;
+  }
+
+  .prose :global(ul) {
+    list-style: disc;
+  }
+
+  .prose :global(ol) {
+    list-style: decimal;
+  }
+
+  .prose :global(li + li) {
+    margin-block-start: var(--space-2xs);
+  }
+
+  .prose :global(li::marker) {
+    color: var(--accent);
+  }
+
+  .prose :global(a) {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 0.18em;
+  }
+
+  .prose :global(a:hover) {
+    color: var(--accent);
+  }
+
+  .prose :global(blockquote) {
+    padding-inline-start: var(--space-md);
+    border-inline-start: 2px solid var(--accent);
+    font-size: var(--step-1);
+    color: var(--ink);
+  }
+
+  .prose :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    padding: 0.1em 0.3em;
+    background: var(--paper-sunk);
+  }
+
+  /* Code reads left to right whatever the page does. */
+  .prose :global(pre) {
+    direction: ltr;
+    overflow-x: auto;
+    padding: var(--space-md);
+    background: var(--ink) !important;
+    color: var(--paper);
+    font-size: var(--step--1);
+    line-height: 1.6;
+  }
+
+  .prose :global(pre code) {
+    padding: 0;
+    background: none;
+  }
+
+  .prose :global(img) {
+    margin-block: var(--space-lg);
+  }
+
+  .prose :global(hr) {
+    border: 0;
+    border-block-start: 1px solid var(--rule);
+    margin-block: var(--space-xl);
+  }
+
+  /* ---- The way on ----------------------------------------------------- */
+
+  .article__next {
+    display: grid;
+    gap: var(--space-sm);
+    max-inline-size: var(--measure);
+    margin-block-start: var(--space-2xl);
+    padding-block-start: var(--space-md);
+    border-block-start: 1px solid var(--ink);
+  }
+
+  .article__cta {
+    justify-self: start;
+    font-size: var(--step-3);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    transition: color var(--dur-base) var(--ease-out-power3);
+  }
+
+  :global([dir='rtl']) .article__cta {
+    font-size: calc(var(--step-3) * 1.1);
+    line-height: var(--ar-leading);
+    letter-spacing: 0;
+  }
+
+  .article__cta:hover,
+  .article__cta:focus-visible {
+    color: var(--accent);
+  }
+
+  .article__dot {
+    color: var(--accent);
+  }
+</style>

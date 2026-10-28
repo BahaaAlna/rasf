@@ -1,0 +1,48 @@
+---
+/*
+  The header as every page uses it: the wordmark and its dot optimised
+  for this language, the nav, and the way to this page in the other
+  language. Pages pass where they are; everything else is worked out here.
+*/
+import { getImage } from 'astro:assets';
+import Header from './Header';
+import logoAr from '../../../assets/logo-ar.png';
+import logoEn from '../../../assets/logo-en.png';
+import dotSrc from '../../../assets/dot.png';
+import { getSite, getUI } from '../../../lib/content';
+import { localizePath, otherLocale, type Locale } from '../../../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  /** This page in the other language. */
+  switchHref: string;
+  /** True on the home page, where the section links jump down the page. */
+  isHome?: boolean;
+}
+
+const { locale, switchHref, isHome = false } = Astro.props;
+const other = otherLocale(locale);
+const site = getSite(locale);
+const ui = getUI(locale);
+
+const logo = await getImage({ src: locale === 'ar' ? logoAr : logoEn, format: 'webp', width: 480 });
+const dot = await getImage({ src: dotSrc, format: 'webp', width: 96 });
+---
+
+<Header
+  client:idle
+  logo={{ src: logo.src, width: Number(logo.attributes.width), height: Number(logo.attributes.height) }}
+  locale={locale}
+  dot={{ src: dot.src, width: Number(dot.attributes.width), height: Number(dot.attributes.height) }}
+  siteName={site.name}
+  nav={ui.nav}
+  home={isHome ? undefined : localizePath('/', locale)}
+  blogHref={localizePath('/blog', locale)}
+  workMenu={[
+    { label: ui.workPages.software, href: localizePath('/work/software', locale) },
+    { label: ui.workPages.designs, href: localizePath('/work/designs', locale) },
+  ]}
+  switchHref={switchHref}
+  switchLabel={ui.switchTo}
+  switchLang={other}
+/>

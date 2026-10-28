@@ -1,0 +1,213 @@
+---
+/*
+  A list of projects, one row each, the whole row a link to the project's
+  page; on a hovering pointer each row calls up its picture, floating
+  after the pointer (floatingShot.ts). The home page's Work section and
+  the Software and Designs pages all show their projects with this.
+*/
+import type { WorkProject } from '../../../data/work';
+import { localizePath, type Locale } from '../../../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  projects: WorkProject[];
+}
+
+const { locale, projects } = Astro.props;
+const number = (n: number) => n.toLocaleString(locale === 'ar' ? 'ar-EG' : 'en', { minimumIntegerDigits: 2 });
+---
+
+<div class="projects" data-projects>
+  <ol class="projects__list">
+    {
+      projects.map((project, i) => (
+        <li data-reveal style={`--reveal-delay: ${0.06 * (i + 1)}s`}>
+          <a class="row" href={localizePath(`/work/${project.slug}`, locale)} data-shot={i}>
+            <span class="row__n u-mono">{number(i + 1)}</span>
+            <span class="row__name">{project.name}</span>
+            <span class="row__meta u-mono">
+              {project.kind} · {project.year}
+            </span>
+            <svg class="row__arrow u-flip" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 12h15M13 6l6 6-6 6" />
+            </svg>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+
+  {/*
+    The pictures, one per project, stacked so moving between rows is a
+    cross-fade rather than a swap. Decorative: each row already says
+    what the project is, so they are hidden from assistive tech.
+  */}
+  <figure class="shot" aria-hidden="true">
+    {
+      projects.map((project, i) => (
+        <img src={project.image} alt="" width="800" height="600" decoding="async" data-shot={i} />
+      ))
+    }
+  </figure>
+</div>
+
+<script>
+  import { initFloatingShot } from './floatingShot';
+
+  document.addEventListener('astro:page-load', initFloatingShot);
+</script>
+
+<style>
+  .projects__list {
+    margin-block-start: var(--space-sm);
+    border-block-start: 1px solid var(--rule);
+  }
+
+  /*
+    One row per project, the whole row the link. A hairline underneath
+    fills with the accent from the reading edge on hover, and the name
+    and arrow lean the way the reader is going.
+  */
+  .row {
+    --lean: 0.4rem;
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.5rem 1fr auto 1.25rem;
+    align-items: baseline;
+    gap: var(--space-md);
+    padding-block: var(--space-md);
+    border-block-end: 1px solid var(--rule);
+  }
+
+  :global([dir='rtl']) .row {
+    --lean: -0.4rem;
+  }
+
+  .row::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: -1px;
+    block-size: 1px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-hover-out) var(--ease-out-expo);
+  }
+
+  :global([dir='rtl']) .row::after {
+    transform-origin: right;
+  }
+
+  .row__name {
+    font-size: var(--step-1);
+    color: var(--ink);
+    transition: transform var(--dur-hover-out) var(--ease-out-expo);
+  }
+
+  :global([dir='rtl']) .row__name {
+    font-size: calc(var(--step-1) * var(--ar-scale));
+  }
+
+  .row__arrow {
+    inline-size: 1.25rem;
+    align-self: center;
+    fill: none;
+    stroke: var(--ink-muted);
+    stroke-width: 1.5;
+    transition:
+      translate var(--dur-hover-out) var(--ease-out-expo),
+      stroke var(--dur-hover-out) var(--ease-out-expo);
+  }
+
+  .row:hover::after,
+  .row:focus-visible::after {
+    transform: scaleX(1);
+    transition-duration: var(--dur-hover-in);
+  }
+
+  .row:hover .row__name,
+  .row:focus-visible .row__name {
+    transform: translateX(var(--lean));
+    transition-duration: var(--dur-hover-in);
+  }
+
+  /* `translate`, not `transform`: the arrow is already mirrored under RTL
+     by .u-flip, and the two would overwrite each other. */
+  .row:hover .row__arrow,
+  .row:focus-visible .row__arrow {
+    translate: calc(var(--lean) * 1.5) 0;
+    stroke: var(--accent);
+    transition-duration: var(--dur-hover-in);
+  }
+
+  /* On a phone the metadata drops under the name rather than squeezing it. */
+  @media (max-width: 30rem) {
+    .row {
+      grid-template-columns: 2rem 1fr 1.25rem;
+      row-gap: var(--space-2xs);
+    }
+
+    .row__meta {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .row__arrow {
+      grid-column: 3;
+      grid-row: 1;
+    }
+  }
+
+  /*
+    The floating picture. Fixed to the viewport, because it follows the
+    pointer's screen position; moved only by the transform the script
+    sets each frame, so only opacity is transitioned here.
+  */
+  .shot {
+    position: fixed;
+    inset-block-start: 0;
+    left: 0;
+    /* Above the header (50) and the scroll bar (60), so the picture is never
+       cut by the bar when the row is near the top; below the skip link (100)
+       and the cursor, which must stay on top of everything. */
+    z-index: 70;
+    inline-size: clamp(14rem, 22vw, 20rem);
+    aspect-ratio: 4 / 3;
+    pointer-events: none;
+    opacity: 0;
+    transform-origin: 50% 100%;
+    will-change: transform;
+    transition: opacity var(--dur-base) var(--ease-out-expo);
+    box-shadow: 0 24px 48px -28px rgb(0 0 0 / 0.35);
+  }
+
+  .shot.is-on {
+    opacity: 1;
+  }
+
+  .shot img {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    opacity: 0;
+    scale: 1.06;
+    transition:
+      opacity var(--dur-base) var(--ease-out-expo),
+      scale var(--dur-hover-in) var(--ease-out-expo);
+  }
+
+  .shot img.is-current {
+    opacity: 1;
+    scale: 1;
+  }
+
+  /* Nothing to hover with: the rows are plain links. */
+  @media (hover: none) {
+    .shot {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,75 @@
+rules_version = '2';
+
+// Who may read and write what. The dashboard's own checks are a
+// convenience; these rules are what actually protect the data.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // An admin is a signed-in user with a document at admins/{uid}.
+    // Those documents are created by hand in the Firebase console.
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    match /admins/{uid} {
+      // Each user may check only their own entry; nobody adds one from the app.
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // The site's sections, one document each (see the dashboard's
+    // content/sections.ts). Public, since the website builds from them.
+    match /content/{section} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // What visitors send from the contact form. Anyone may send one, in
+    // the right shape and size; only admins read, mark or delete them.
+    match /messages/{id} {
+      allow create: if isMessage(request.resource.data);
+      allow read, delete: if isAdmin();
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+        && request.resource.data.read is bool;
+    }
+
+    function isMessage(m) {
+      return m.keys().hasOnly(['name', 'email', 'needs', 'message', 'locale', 'createdAt', 'read'])
+        && m.keys().hasAll(['name', 'email', 'needs', 'message', 'locale', 'createdAt', 'read'])
+        && m.name is string && m.name.size() > 0 && m.name.size() <= 200
+        && m.email is string && m.email.size() <= 320 && m.email.matches('^[^@ ]+@[^@ ]+[.][^@ ]+$')
+        && m.needs is list && m.needs.size() <= 12
+        && m.message is string && m.message.size() <= 5000
+        && m.locale in ['ar', 'en']
+        // Stamped by Firestore itself as it's saved, so it can't be faked.
+        && m.createdAt == request.time
+        && m.read == false;
+    }
+
+    match /posts/{slug} {
+      // Anyone may read a published post (the website builds from these);
+      // drafts only admins.
+      allow read: if resource.data.draft == false || isAdmin();
+      allow create, update: if isAdmin() && isPost(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    function isPost(post) {
+      return post.keys().hasOnly(['date', 'draft', 'ar', 'en', 'updatedAt'])
+        && post.date is timestamp
+        && post.draft is bool
+        && (post.ar == null || isVersion(post.ar))
+        && (post.en == null || isVersion(post.en))
+        && (post.ar != null || post.en != null);
+    }
+
+    function isVersion(v) {
+      return v.keys().hasOnly(['title', 'description', 'body'])
+        && v.title is string && v.title.size() > 0
+        && v.description is string
+        && v.body is string;
+    }
+  }
+}

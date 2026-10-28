@@ -1,0 +1,298 @@
+---
+/*
+  Draft A of the Software and Designs pages: a zigzag.
+
+  Each project is its picture and its words side by side, the picture
+  swapping sides from one project to the next, with nothing between them
+  but room, so the page reads as one flowing line rather than a stack of
+  cards. A thin line crosses the gap from each picture to its words and
+  ends in the dot from the logotype, right where the description starts.
+  As a project rises into view the line draws itself out from the
+  picture, and the dot lands once it arrives.
+
+  On a narrow screen the picture sits above its words, and the line drops
+  from one to the other instead.
+
+  The whole project is one link, to its page at /work/<slug>.
+*/
+import type { WorkProject } from '../../../data/work';
+import { localizePath, type Locale } from '../../../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  projects: WorkProject[];
+}
+
+const { locale, projects } = Astro.props;
+const number = (n: number) => n.toLocaleString(locale === 'ar' ? 'ar-EG' : 'en', { minimumIntegerDigits: 2 });
+---
+
+<ol class="zig">
+  {
+    projects.map((project, i) => (
+      <li class="zig__item" data-side={i % 2 === 0 ? 'start' : 'end'} data-reveal>
+        <a class="zig__link" href={localizePath(`/work/${project.slug}`, locale)}>
+          <span class="zig__pic">
+            <img src={project.image} alt="" width="800" height="600" loading="lazy" decoding="async" />
+          </span>
+          <span class="zig__text">
+            <span class="zig__line" aria-hidden="true" />
+            <span class="zig__n u-mono">{number(i + 1)}</span>
+            <span class="zig__name">{project.name}</span>
+            <span class="zig__meta u-mono">
+              {project.kind} · {project.year}
+            </span>
+            {project.summary && <span class="zig__summary">{project.summary}</span>}
+            <svg class="zig__go u-flip" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 12h15M13 6l6 6-6 6" />
+            </svg>
+          </span>
+        </a>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .zig {
+    /* The gap the line crosses, between a picture and its words. */
+    --gap: clamp(2.5rem, 7vw, 7.5rem);
+    /* How long the line takes to draw, and when the dot lands after it. */
+    --draw: 1.1s;
+    display: grid;
+    gap: clamp(var(--space-2xl), 12vw, var(--space-3xl));
+  }
+
+  .zig__link {
+    display: grid;
+    gap: var(--space-lg);
+    color: var(--ink);
+  }
+
+  /* ---- The picture ---------------------------------------------------- */
+
+  .zig__pic {
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    background: var(--paper-sunk);
+  }
+
+  .zig__pic img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    transition: scale var(--dur-hover-out) var(--ease-out-expo);
+  }
+
+  .zig__link:hover .zig__pic img,
+  .zig__link:focus-visible .zig__pic img {
+    scale: 1.04;
+    transition-duration: var(--dur-hover-in);
+  }
+
+  /* ---- The words ------------------------------------------------------ */
+
+  .zig__text {
+    position: relative;
+    display: grid;
+    justify-items: start;
+    gap: var(--space-sm);
+    /* Room for the dot the dropping line ends in, above the number. */
+    padding-block-start: var(--space-sm);
+  }
+
+  .zig__name {
+    font-size: var(--step-3);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    transition: color var(--dur-base) var(--ease-out-power3);
+  }
+
+  :global([dir='rtl']) .zig__name {
+    font-size: calc(var(--step-3) * 1.1);
+    line-height: var(--ar-leading);
+    letter-spacing: 0;
+  }
+
+  .zig__summary {
+    max-inline-size: 38ch;
+    margin-block-start: var(--space-xs);
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+
+  :global([dir='rtl']) .zig__summary {
+    font-size: calc(var(--step-1) * var(--ar-scale));
+    line-height: calc(1.45 * var(--ar-leading));
+  }
+
+  .zig__go {
+    inline-size: 1.5rem;
+    margin-block-start: var(--space-sm);
+    fill: none;
+    stroke: var(--ink-muted);
+    stroke-width: 1.5;
+    transition:
+      translate var(--dur-hover-out) var(--ease-out-expo),
+      stroke var(--dur-hover-out) var(--ease-out-expo);
+  }
+
+  .zig__link:hover .zig__name,
+  .zig__link:focus-visible .zig__name {
+    color: var(--accent);
+  }
+
+  /* `translate`, not `transform`: the arrow's RTL mirror is a transform. */
+  .zig__link:hover .zig__go,
+  .zig__link:focus-visible .zig__go {
+    translate: 0.5rem 0;
+    stroke: var(--accent);
+    transition-duration: var(--dur-hover-in);
+  }
+
+  :global([dir='rtl']) .zig__link:hover .zig__go,
+  :global([dir='rtl']) .zig__link:focus-visible .zig__go {
+    translate: -0.5rem 0;
+  }
+
+  /* ---- The line, on a narrow screen: it drops from the picture -------- */
+
+  .zig__line {
+    position: absolute;
+    inset-block-end: 100%;
+    inset-inline-start: 0.3rem;
+    inline-size: 1px;
+    block-size: var(--space-lg);
+    background: var(--ink-muted);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition:
+      transform var(--draw) var(--ease-out-expo),
+      background var(--dur-base) var(--ease-out-power3);
+  }
+
+  /* The dot, where the line meets the words. */
+  .zig__line::after {
+    content: '';
+    position: absolute;
+    inset-block-end: -0.3rem;
+    left: -0.3rem;
+    inline-size: 0.6rem;
+    block-size: 0.6rem;
+    border-radius: 50%;
+    background: var(--accent);
+    scale: 0;
+    transition: scale var(--dur-base) var(--ease-out-expo);
+  }
+
+  .zig__item:global(.is-revealed) .zig__line {
+    transform: none;
+  }
+
+  .zig__item:global(.is-revealed) .zig__line::after {
+    scale: 1;
+    transition-delay: calc(var(--draw) * 0.6);
+  }
+
+  .zig__link:hover .zig__line,
+  .zig__link:focus-visible .zig__line {
+    background: var(--accent);
+  }
+
+  /* ---- Side by side, zigzagging --------------------------------------- */
+
+  @media (min-width: 56rem) {
+    .zig__link {
+      grid-template-columns: 7fr 5fr;
+      align-items: center;
+      gap: var(--gap);
+    }
+
+    /* Every other project has its picture on the far side. */
+    .zig__item[data-side='end'] .zig__link {
+      grid-template-columns: 5fr 7fr;
+    }
+
+    .zig__item[data-side='end'] .zig__pic {
+      order: 2;
+    }
+
+    .zig__text {
+      padding-block-start: 0;
+    }
+
+    /*
+      Across the gap now: level with the number, from the picture's edge
+      to the words. Which edge depends on the side the picture is on, and
+      on the direction of the page; the line draws out from the picture.
+    */
+    .zig__line {
+      inset-block: 0.65em auto;
+      inset-inline-start: calc(var(--gap) * -1);
+      inline-size: calc(var(--gap) - var(--space-sm));
+      block-size: 1px;
+      transform: scaleX(0);
+      transform-origin: left;
+    }
+
+    .zig__line::after {
+      inset-block: -0.3rem auto;
+      left: auto;
+      right: -0.3rem;
+    }
+
+    .zig__item[data-side='end'] .zig__line {
+      inset-inline: auto calc(var(--gap) * -1);
+      transform-origin: right;
+    }
+
+    .zig__item[data-side='end'] .zig__line::after {
+      right: auto;
+      left: -0.3rem;
+    }
+
+    /* Under RTL the sides swap, so the origins and dots swap with them. */
+    :global([dir='rtl']) .zig__line {
+      transform-origin: right;
+    }
+
+    :global([dir='rtl']) .zig__line::after {
+      right: auto;
+      left: -0.3rem;
+    }
+
+    :global([dir='rtl']) .zig__item[data-side='end'] .zig__line {
+      transform-origin: left;
+    }
+
+    :global([dir='rtl']) .zig__item[data-side='end'] .zig__line::after {
+      left: auto;
+      right: -0.3rem;
+    }
+
+    /* The number clears the dot. */
+    .zig__n {
+      padding-inline-start: var(--space-xs);
+    }
+
+    .zig__item[data-side='end'] .zig__text {
+      justify-items: end;
+      text-align: end;
+    }
+
+    .zig__item[data-side='end'] .zig__n {
+      padding-inline: 0 var(--space-xs);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .zig__line,
+    .zig__line::after {
+      transform: none;
+      scale: 1;
+      transition: none;
+    }
+  }
+</style>

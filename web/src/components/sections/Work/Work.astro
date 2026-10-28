@@ -1,0 +1,121 @@
+---
+/*
+  Selected work: a few words about the studio, then a short list of
+  projects. Kept deliberately small — names and a line of metadata, no
+  images — because each row is only a doorway: the project itself lives
+  on its own page, `/work/<slug>`.
+
+  On a hovering pointer each row also calls up its project's picture,
+  which floats after the pointer as if weightless — the same drift as the
+  cards in "What is Rasf?". That motion is `floatingShot.ts`; everything else
+  is CSS, and the shared [data-reveal] observer brings the section in.
+  The list itself, pictures and all, is ProjectList, which the Software
+  and Designs pages use too.
+*/
+import type { WorkSection } from '../../../lib/content';
+import ProjectList from './ProjectList.astro';
+import { localizePath, type Locale } from '../../../lib/i18n';
+
+interface Props {
+  locale: Locale;
+  /** The section's heading — the nav's own word for it. */
+  title: string;
+  copy: WorkSection;
+}
+
+const { locale, title, copy } = Astro.props;
+---
+
+<section id="work" class="work" aria-labelledby="work-title">
+  <div class="work__inner u-wrap">
+    <header class="work__about">
+      <h2 id="work-title" class="work__title" data-reveal>{title}</h2>
+      <p class="work__intro" data-reveal style="--reveal-delay: 0.08s">{copy.intro}</p>
+    </header>
+
+    <div class="work__list">
+      <p class="u-mono" data-reveal>{copy.listLabel}</p>
+      <ProjectList locale={locale} projects={copy.projects} />
+      <a class="work__all u-mono" href={localizePath('/work/software', locale)} data-reveal data-weightless>
+        <span class="work__all-label" data-weightless-label>
+          {copy.allLabel}
+          <svg class="u-flip" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 12h15M13 6l6 6-6 6" />
+          </svg>
+        </span>
+      </a>
+    </div>
+  </div>
+
+</section>
+
+
+<style>
+  .work {
+    border-block-start: 1px solid var(--rule);
+    padding-block: var(--space-2xl);
+  }
+
+  /*
+    Two columns on a wide screen — who we are on the start side, what we
+    have built beside it — and one stacked column anywhere narrower.
+  */
+  .work__inner {
+    display: grid;
+    gap: var(--space-xl) var(--space-2xl);
+  }
+
+  @media (min-width: 60rem) {
+    .work__inner {
+      grid-template-columns: 5fr 7fr;
+      align-items: start;
+    }
+  }
+
+  .work__title {
+    font-size: var(--step-3);
+    color: var(--ink);
+  }
+
+  .work__intro {
+    margin-block-start: var(--space-md);
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+
+  :global([dir='rtl']) .work__title {
+    font-size: calc(var(--step-3) * var(--ar-scale));
+  }
+
+  :global([dir='rtl']) .work__intro {
+    font-size: calc(var(--step-1) * var(--ar-scale));
+    line-height: calc(1.45 * var(--ar-leading));
+  }
+
+  .work__all {
+    display: inline-block;
+    margin-block-start: var(--space-lg);
+    color: var(--ink);
+  }
+
+  /* The label and its arrow, floated together a little further than the
+     link itself; see lib/motion/weightless.ts. */
+  .work__all-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .work__all svg {
+    inline-size: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+
+  .work__all:hover {
+    color: var(--accent);
+  }
+
+</style>

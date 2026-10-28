@@ -1,0 +1,73 @@
+---
+/*
+  The home page, once for both languages. `pages/index.astro` (Arabic)
+  and `pages/en/index.astro` only pick the locale; everything else —
+  which sections, in which order, with which copy — is decided here, so
+  a new section is added in one place.
+*/
+import { getImage } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from './layout/Header/SiteHeader.astro';
+import Hero from './sections/Hero/Hero';
+import Mosaic from './sections/Mosaic/Mosaic';
+import Work from './sections/Work/Work.astro';
+import Services from './sections/Services/Services.astro';
+import About from './sections/About/About.astro';
+import Contact from './sections/Contact/Contact.astro';
+import logoAr from '../assets/logo-ar.png';
+import logoEn from '../assets/logo-en.png';
+import { getHero, getUI, getSite, getOrigin, getWork, getServices, getAbout, getContact } from '../lib/content';
+import { alternatePath, otherLocale, type Locale } from '../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const other = otherLocale(locale);
+
+const copy = getHero(locale);
+const ui = getUI(locale);
+const site = getSite(locale);
+const originCopy = getOrigin(locale);
+const workCopy = getWork(locale);
+const servicesCopy = getServices(locale);
+const aboutCopy = getAbout(locale);
+const contactCopy = getContact(locale);
+// The Mosaic samples the logotype at the header's size.
+const logo = await getImage({ src: locale === 'ar' ? logoAr : logoEn, format: 'webp', width: 480 });
+// Contact bends the logotype round a turning wheel; drawn larger, so it
+// stays sharp along the curve.
+const drumLogo = await getImage({ src: locale === 'ar' ? logoAr : logoEn, format: 'webp', width: 960 });
+
+/** Joins the hero's list of actions; Arabic has its own comma. */
+const listSeparator = locale === 'ar' ? '، ' : ', ';
+---
+
+<BaseLayout path="/">
+  <SiteHeader slot="header" locale={locale} switchHref={alternatePath(Astro.url, other)} isHome />
+
+  <Hero
+    client:load
+    lead={copy.lead}
+    words={copy.words}
+    interval={copy.interval}
+    support={ui.heroSupport}
+    actions={ui.actions}
+    listSeparator={listSeparator}
+  />
+
+  <Mosaic client:idle src={logo.src} locale={locale} copy={originCopy} />
+
+  <Work locale={locale} title={ui.nav.work} copy={workCopy} />
+  <Services locale={locale} title={ui.nav.services} copy={servicesCopy} cta={ui.actions.contact} />
+  <About locale={locale} title={ui.nav.about} copy={aboutCopy} />
+  <Contact
+    locale={locale}
+    title={ui.nav.contact}
+    copy={contactCopy}
+    site={site}
+    logo={{ src: drumLogo.src, width: drumLogo.attributes.width, height: drumLogo.attributes.height }}
+    needs={servicesCopy.services.map((service) => service.title)}
+  />
+</BaseLayout>

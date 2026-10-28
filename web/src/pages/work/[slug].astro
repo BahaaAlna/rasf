@@ -1,0 +1,10 @@
+---
+import ProjectPage from '../../components/work/ProjectPage.astro';
+import { projectPaths } from '../../lib/work';
+
+export const getStaticPaths = () => projectPaths('ar');
+
+const { project } = Astro.props;
+---
+
+<ProjectPage locale="ar" project={project} />

@@ -1,0 +1,185 @@
+---
+/*
+  The blog's list page, once for both languages. A big heading like the
+  home page's sections, a line about what's here, then the posts newest
+  first: date, title and description in a row, hairlines between.
+*/
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../layout/Header/SiteHeader.astro';
+import PageFoot from './PageFoot.astro';
+import { getUI } from '../../lib/content';
+import { getBlog, getPosts, postHref, formatDate } from '../../lib/blog';
+import { localizePath, otherLocale, type Locale } from '../../lib/i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const ui = getUI(locale);
+const copy = getBlog(locale);
+const posts = await getPosts(locale);
+
+// The closing full stop takes the accent, as it does across the site.
+const heading = copy.heading.trim();
+const stop = heading.endsWith('.');
+const headingText = stop ? heading.slice(0, -1) : heading;
+---
+
+<BaseLayout path="/blog" title={ui.nav.blog} description={copy.intro}>
+  <SiteHeader slot="header" locale={locale} switchHref={localizePath('/blog', otherLocale(locale))} />
+
+  <section class="blog u-wrap" aria-labelledby="blog-title">
+    <h1 id="blog-title" class="blog__heading" data-reveal>
+      {headingText}{stop && <span class="blog__dot">.</span>}
+    </h1>
+    <p class="blog__intro" data-reveal style="--reveal-delay: 0.06s">{copy.intro}</p>
+
+    {
+      posts.length === 0 ? (
+        <p class="blog__empty u-mono">{copy.empty}</p>
+      ) : (
+        <ol class="posts">
+          {posts.map((post) => (
+            <li class="post" data-reveal>
+              <a class="post__link" href={postHref(post)}>
+                <time class="post__date u-mono" datetime={post.data.date.toISOString()}>
+                  {formatDate(post.data.date, locale)}
+                </time>
+                <span class="post__title">{post.data.title}</span>
+                <span class="post__desc">{post.data.description}</span>
+                <svg class="post__arrow u-flip" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 12h15M13 6l6 6-6 6" />
+                </svg>
+              </a>
+            </li>
+          ))}
+        </ol>
+      )
+    }
+  </section>
+
+  <PageFoot slot="footer" locale={locale} />
+</BaseLayout>
+
+<style>
+  .blog {
+    padding-block-start: var(--space-2xl);
+  }
+
+  .blog__heading {
+    font-size: var(--step-4);
+    letter-spacing: -0.04em;
+    color: var(--ink);
+  }
+
+  :global([dir='rtl']) .blog__heading {
+    font-size: calc(var(--step-4) * 1.1);
+    letter-spacing: 0;
+  }
+
+  .blog__dot {
+    color: var(--accent);
+  }
+
+  .blog__intro {
+    max-inline-size: 44ch;
+    margin-block-start: var(--space-lg);
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+
+  :global([dir='rtl']) .blog__intro {
+    font-size: calc(var(--step-1) * var(--ar-scale));
+    line-height: calc(1.45 * var(--ar-leading));
+  }
+
+  .blog__empty {
+    margin-block-start: var(--space-2xl);
+  }
+
+  .posts {
+    margin-block-start: var(--space-2xl);
+    border-block-start: 1px solid var(--ink);
+  }
+
+  .post {
+    border-block-end: 1px solid var(--rule);
+  }
+
+  /* Date, then title over description, then the arrow; stacked when narrow. */
+  .post__link {
+    display: grid;
+    gap: var(--space-xs) var(--space-lg);
+    padding-block: var(--space-lg);
+    color: var(--ink);
+  }
+
+  @media (min-width: 48rem) {
+    .post__link {
+      grid-template-columns: 12rem 1fr auto;
+      grid-template-areas:
+        'date title arrow'
+        'date desc arrow';
+      align-items: baseline;
+    }
+
+    .post__date {
+      grid-area: date;
+    }
+
+    .post__title {
+      grid-area: title;
+    }
+
+    .post__desc {
+      grid-area: desc;
+    }
+
+    .post__arrow {
+      grid-area: arrow;
+      align-self: center;
+    }
+  }
+
+  .post__title {
+    font-size: var(--step-2);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    transition: color var(--dur-base) var(--ease-out-power3);
+  }
+
+  :global([dir='rtl']) .post__title {
+    font-size: calc(var(--step-2) * var(--ar-scale));
+    line-height: calc(1.1 * var(--ar-leading));
+    letter-spacing: 0;
+  }
+
+  .post__desc {
+    max-inline-size: 60ch;
+    color: var(--ink-muted);
+  }
+
+  .post__arrow {
+    inline-size: 1.5rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    transition: translate var(--dur-base) var(--ease-out-expo);
+  }
+
+  .post__link:hover .post__title,
+  .post__link:focus-visible .post__title {
+    color: var(--accent);
+  }
+
+  /* `translate`, not `transform`: the arrow's RTL mirror lives in transform. */
+  .post__link:hover .post__arrow {
+    translate: 0.35rem 0;
+  }
+
+  :global([dir='rtl']) .post__link:hover .post__arrow {
+    translate: -0.35rem 0;
+  }
+</style>
