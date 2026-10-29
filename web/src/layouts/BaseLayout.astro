@@ -5,7 +5,7 @@ import Cursor from '../components/layout/Cursor/Cursor';
 import ScrollBar from '../components/layout/ScrollBar/ScrollBar';
 import { getLocale, dirFor, locales, type Locale } from '../lib/i18n';
 import Maintenance from '../components/layout/Maintenance.astro';
-import Intro from '../components/layout/Intro.astro';
+import Loader from '../components/layout/Loader.astro';
 import { getMaintenance, getSite } from '../lib/content';
 import { absolute, graph, jsonLd, pageUrl, type Crumb, type PageKind } from '../lib/seo';
 import '../styles/global.css';
@@ -123,8 +123,8 @@ const structured = graph({ locale, path, title: title ?? pageTitle, description,
   </head>
 
   <body>
-    {/* The logo film, on a visit's first page; maintenance has an entrance of its own. */}
-    {!paused && <Intro locale={locale} />}
+    {/* While the fonts and pictures arrive; maintenance has an entrance of its own. */}
+    {!paused && <Loader locale={locale} />}
     <a class="u-skip" href="#main">
       {locale === 'ar' ? 'تخطَّ إلى المحتوى' : 'Skip to content'}
     </a>

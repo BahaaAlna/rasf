@@ -105,6 +105,9 @@ export const SECTIONS: Section[] = [
         fields: [text('viewWork', 'See the work'), text('contact', 'Start a project')],
       },
       text('switchTo', 'Language switch', { hint: 'The other language’s name, on the button in the header.' }),
+      text('slogan', 'Slogan', {
+        hint: 'A few words about the name, under it on the loading screen. A full stop at the end turns blue.',
+      }),
       {
         kind: 'group',
         key: 'menu',

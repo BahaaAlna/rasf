@@ -11,6 +11,8 @@ export interface UIStrings {
   workPages: { software: string; designs: string };
   actions: { viewWork: string; contact: string };
   switchTo: string;
+  /** A few words about the name, under it on the loading screen. Its closing full stop takes the accent. */
+  slogan: string;
   /** The button that opens and closes the menu on a phone. */
   menu: { open: string; close: string };
   /** Supporting line under the hero sentence. TODO: confirm. */
@@ -29,6 +31,7 @@ export const ui: Record<Locale, UIStrings> = {
     workPages: { software: 'برمجيات', designs: 'تصاميم' },
     actions: { viewWork: 'شاهد الأعمال', contact: 'ابدأ مشروعك' },
     switchTo: 'English',
+    slogan: 'حجراً حجراً.',
     menu: { open: 'القائمة', close: 'إغلاق' },
     heroSupport: 'استوديو برمجيات وتصميم. نبني المواقع وتطبيقات الويب كاملة، من أول فكرة حتى الإطلاق، ونصمم هوياتها.',
   },
@@ -43,6 +46,7 @@ export const ui: Record<Locale, UIStrings> = {
     workPages: { software: 'Software', designs: 'Designs' },
     actions: { viewWork: 'View work', contact: 'Start a project' },
     switchTo: 'العربية',
+    slogan: 'Stone by stone.',
     menu: { open: 'Menu', close: 'Close' },
     heroSupport: 'A software and design studio. We build websites and web apps end to end, from the first idea to launch, and design the brands behind them.',
   },

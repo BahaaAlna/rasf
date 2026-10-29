@@ -1,0 +1,183 @@
+---
+/*
+  While a page's fonts and pictures are still arriving: the name and the
+  slogan, and under them a hairline that fills as they land. It only ever
+  shows when there is a wait: a page that's ready within half a second
+  (a return visit, a fast connection) never shows it at all.
+
+  The picture is drawn as the site builds (lib/og.ts), so the screen
+  needs nothing that's still loading. It waits for the page's load and
+  then for its fonts, and never longer than a few seconds whatever
+  happens. Without JavaScript it never appears, so nothing is stuck
+  behind it.
+*/
+import type { Locale } from '../../lib/i18n';
+import { LOADER } from '../../lib/og';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+---
+
+<script is:inline>
+  document.documentElement.classList.add('is-loading');
+</script>
+
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader__inner">
+    <img
+      class="loader__mark"
+      src={`/loader/${locale}.png`}
+      width={LOADER.width / 2}
+      height={LOADER.height / 2}
+      alt=""
+      fetchpriority="high"
+    />
+    <span class="loader__track"><span class="loader__fill" id="loader-fill"></span></span>
+  </div>
+</div>
+
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+    const screen = document.getElementById('loader');
+    const fill = document.getElementById('loader-fill');
+    if (!screen || !fill) return;
+
+    let done = false;
+    let shown = 0;
+    // Never stands still: creeps toward what's known so far, a little ahead of it.
+    const show = (part) => {
+      shown = Math.max(shown, Math.min(part, 1));
+      fill.style.transform = `scaleX(${shown})`;
+    };
+    show(0.08);
+
+    const start = performance.now();
+    const finish = () => {
+      if (done) return;
+      done = true;
+      // Ready before it was ever shown: gone at once, with no fade to glimpse.
+      if (performance.now() - start < 450) {
+        root.classList.remove('is-loading');
+        screen.remove();
+        return;
+      }
+      show(1);
+      screen.classList.add('loader--out');
+      setTimeout(() => {
+        root.classList.remove('is-loading');
+        screen.remove();
+      }, 520);
+    };
+
+    // The pictures on the page, counted as they land, once the page is read.
+    const count = () => {
+      const images = [...document.images].filter((img) => !img.closest('#loader'));
+      const total = images.length + 1;
+      let landed = images.filter((img) => img.complete).length;
+      show(0.15 + (0.7 * landed) / total);
+      images.forEach((img) => {
+        if (img.complete) return;
+        const one = () => show(0.15 + (0.7 * ++landed) / total);
+        img.addEventListener('load', one, { once: true });
+        img.addEventListener('error', one, { once: true });
+      });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', count, { once: true });
+    else count();
+
+    // Done when the page has loaded and its fonts are in.
+    const loaded = document.readyState === 'complete' ? Promise.resolve() : new Promise((r) => addEventListener('load', r, { once: true }));
+    loaded.then(() => (document.fonts ? document.fonts.ready : null)).then(finish, finish);
+    setTimeout(finish, 6000);
+  })();
+</script>
+
+<style>
+  .loader {
+    display: none;
+  }
+
+  :global(html.is-loading) {
+    overflow: hidden;
+  }
+
+  :global(html.is-loading) .loader {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    background: var(--paper);
+    transition:
+      opacity 0.5s var(--ease-out-power3),
+      visibility 0s linear 0.5s;
+  }
+
+  .loader.loader--out {
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  /* Held back nearly half a second: a page that's ready by then never shows it. */
+  .loader__inner {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-md);
+    opacity: 0;
+    animation: loader-in 0.6s var(--ease-out-expo) 0.45s forwards;
+  }
+
+  .loader__mark {
+    display: block;
+    inline-size: min(320px, 72vw);
+    block-size: auto;
+  }
+
+  .loader__track {
+    display: block;
+    inline-size: min(9rem, 40vw);
+    block-size: 1px;
+    overflow: hidden;
+    background: var(--rule);
+  }
+
+  /* The hairline fills from the side the language starts on. */
+  .loader__fill {
+    display: block;
+    block-size: 100%;
+    background: var(--ink);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.6s var(--ease-out-power3);
+  }
+
+  :global([dir='rtl']) .loader__fill {
+    transform-origin: right;
+  }
+
+  @keyframes loader-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loader__inner {
+      animation-duration: 0.01ms;
+    }
+
+    .loader__fill {
+      transition: none;
+    }
+  }
+</style>

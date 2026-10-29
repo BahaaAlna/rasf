@@ -140,3 +140,42 @@ export async function projectCard(project: { name: string; kind: string; image: 
 
 /** Only pictures that are photographs or screenshots make a project card; drawings fall back to the site's. */
 export const hasPhoto = (image: string) => /^\/work\/[^/]+\.(jpe?g|png|webp)$/i.test(image);
+
+/*
+  The loading screen's picture: the logotype with the slogan under it, its
+  closing full stop in the accent, on a transparent ground. Drawn here, at
+  twice the size it's shown, so the screen needs no web font to look
+  right: it shows while the fonts are still on their way.
+*/
+export const LOADER = { width: 640, height: 300 } as const;
+
+export async function loaderMark(slogan: string, locale: Locale): Promise<Buffer> {
+  const words = slogan.trim();
+  const stop = words.endsWith('.');
+  const plain = escape(stop ? words.slice(0, -1) : words);
+  const font = FONT[locale];
+  const line = await sharp({
+    text: {
+      text: `<span foreground="${MUTED}">${plain}</span>${stop ? `<span foreground="${ACCENT}">.</span>` : ''}`,
+      font: `${font.family} ${locale === 'ar' ? 60 : 40}`,
+      fontfile: font.file,
+      align: 'center',
+      rgba: true,
+    },
+  })
+    .png()
+    .toBuffer({ resolveWithObject: true });
+  const logo = await sharp(file(`src/assets/logo-${locale}.png`))
+    .resize({ height: locale === 'ar' ? 104 : 120 })
+    .toBuffer({ resolveWithObject: true });
+
+  const gap = 40;
+  const top = Math.round((LOADER.height - logo.info.height - gap - line.info.height) / 2);
+  return sharp({ create: { width: LOADER.width, height: LOADER.height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite([
+      { input: logo.data, top, left: Math.round((LOADER.width - logo.info.width) / 2) },
+      { input: line.data, top: top + logo.info.height + gap, left: Math.round((LOADER.width - line.info.width) / 2) },
+    ])
+    .png({ compressionLevel: 9, palette: true })
+    .toBuffer();
+}
