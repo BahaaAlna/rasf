@@ -1,0 +1,16 @@
+{
+  "name": "rasf-mail",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "check": "tsc --noEmit",
+    "test": "node --test test/*.test.ts",
+    "preview": "node test/preview.ts"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261029.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.155.0"
+  }
+}

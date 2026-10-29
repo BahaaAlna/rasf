@@ -1,0 +1,11 @@
+{
+  // hello@rasf.studio: passes each message on and answers from no-reply@.
+  // Email Routing sends hello@ here (Email › Routing rules › Send to a Worker).
+  "name": "rasf-mail",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  // Mail only: no web address of its own.
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": true }
+}
