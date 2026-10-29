@@ -197,5 +197,17 @@ const structured = graph({ locale, path, title: title ?? pageTitle, description,
       document.addEventListener('astro:page-load', initWeightless);
       new MutationObserver(initWeightless).observe(document.body, { childList: true, subtree: true });
     </script>
+    <script>
+      // A link to a section of another page lands on it, rather than
+      // opening at the top and gliding down: smooth scrolling is off while
+      // the ClientRouter swaps pages, and back on once it has arrived.
+      const root = document.documentElement;
+      document.addEventListener('astro:after-swap', () => {
+        root.style.scrollBehavior = 'auto';
+      });
+      document.addEventListener('astro:page-load', () => {
+        requestAnimationFrame(() => root.style.removeProperty('scroll-behavior'));
+      });
+    </script>
   </body>
 </html>

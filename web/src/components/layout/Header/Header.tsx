@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
 import RepelLink from './RepelLink';
 import { LOGO_DOT } from '../../../lib/logo/dot';
 import { getLenis } from '../../../lib/lenis';
@@ -222,13 +222,26 @@ export default function Header({
   }, [open]);
 
   /*
-    Picking a link closes the sheet. Smooth scrolling is let go first, in
-    the same moment: the jump to a section on this page goes through it,
-    and runs before the sheet has finished closing.
+    Picking a link closes the sheet. A section on this page is jumped to
+    at once, not scrolled to, while the sheet still covers the page: it
+    fades away onto the section picked, never onto where the reader was.
   */
-  const pick = () => {
-    getLenis()?.start();
+  const pick = (event: MouseEvent<HTMLAnchorElement>) => {
+    const lenis = getLenis();
+    lenis?.start();
     document.documentElement.style.overflow = '';
+    const href = event.currentTarget.getAttribute('href') ?? '';
+    const target = href.startsWith('#') ? document.getElementById(href.slice(1)) : null;
+    if (target) {
+      // Ours alone: the page's own handler would scroll there smoothly.
+      event.preventDefault();
+      event.stopPropagation();
+      if (lenis) lenis.scrollTo(target, { offset: 0, immediate: true, force: true });
+      else window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY, behavior: 'instant' });
+      history.pushState(null, '', href);
+      target.setAttribute('tabindex', '-1');
+      target.focus({ preventScroll: true });
+    }
     setOpen(false);
   };
   const number = (n: number) => n.toLocaleString(locale === 'ar' ? 'ar-EG' : 'en', { minimumIntegerDigits: 2 });
