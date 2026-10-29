@@ -9,10 +9,19 @@ const formatDate = (date: Date) =>
 /** As on the website's blog: eight posts to a page. */
 const PER_PAGE = 8;
 
+type Show = 'all' | 'live' | 'drafts';
+const SHOWS: { value: Show; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'live', label: 'Live' },
+  { value: 'drafts', label: 'Drafts' },
+];
+
 /**
  * Every post, newest first, numbered, eight to a page as on the site,
- * with which languages it's written in. The page is in the address
- * (?page=2), so a refresh or the back button lands on the same one.
+ * with which languages it's written in; or only the live ones, or only
+ * the drafts. Both the page and the choice are in the address
+ * (?show=drafts&page=2), so a refresh or the back button lands on the
+ * same list.
  */
 export default function PostsList() {
   const { posts, error } = usePosts();
@@ -22,14 +31,28 @@ export default function PostsList() {
   const sorted = posts
     ? [...posts].sort((a, b) => b.date.valueOf() - a.date.valueOf() || a.slug.localeCompare(b.slug))
     : [];
-  const pages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
+  const drafts = sorted.filter((p) => p.draft).length;
+  const count: Record<Show, number> = { all: sorted.length, live: sorted.length - drafts, drafts };
+
+  const asked = params.get('show');
+  const show: Show = asked === 'live' || asked === 'drafts' ? asked : 'all';
+  const listed = show === 'all' ? sorted : sorted.filter((p) => p.draft === (show === 'drafts'));
+
+  const pages = Math.max(1, Math.ceil(listed.length / PER_PAGE));
   const page = Math.min(pages, Math.max(1, Number(params.get('page')) || 1));
   const first = (page - 1) * PER_PAGE;
-  const shown = sorted.slice(first, first + PER_PAGE);
-  const drafts = sorted.filter((p) => p.draft).length;
+  const shown = listed.slice(first, first + PER_PAGE);
+
+  /** The address for a list and a page; the defaults are left out. */
+  const open = (nextShow: Show, nextPage: number) => {
+    const next: Record<string, string> = {};
+    if (nextShow !== 'all') next.show = nextShow;
+    if (nextPage > 1) next.page = String(nextPage);
+    setParams(next);
+  };
 
   const go = (n: number) => {
-    setParams(n > 1 ? { page: String(n) } : {});
+    open(show, n);
     window.scrollTo({ top: 0 });
   };
 
@@ -56,6 +79,27 @@ export default function PostsList() {
       {posts && posts.length === 0 && <p className="empty">No posts yet. Write the first one.</p>}
 
       {posts && posts.length > 0 && (
+        <>
+          <div className="tabs tabs--pills posts__filter" role="tablist" aria-label="Show">
+            {SHOWS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                role="tab"
+                aria-selected={show === value}
+                className="tabs__tab"
+                onClick={() => open(value, 1)}
+              >
+                {label} <span className="mono">({count[value]})</span>
+              </button>
+            ))}
+          </div>
+
+          {listed.length === 0 && <p className="empty">{show === 'drafts' ? 'No drafts.' : 'Nothing live yet.'}</p>}
+        </>
+      )}
+
+      {posts && listed.length > 0 && (
         <>
           <table className="table">
             <thead>
