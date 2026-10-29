@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <!-- For a project without a picture of its own: paper, a hairline, the dot. -->
+  <rect width="800" height="600" fill="#eeeae1"/>
+  <circle cx="400" cy="300" r="120" fill="none" stroke="#18181c" stroke-opacity="0.12"/>
+  <circle cx="400" cy="300" r="22" fill="#183fc0"/>
+</svg>

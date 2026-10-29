@@ -51,6 +51,8 @@ export interface Section {
   shared?: Field[];
   /** The site's current text, to start from. */
   current: () => SectionDoc;
+  /** Keys in each language that have moved out of this section, dropped when it's saved. */
+  moved?: string[];
 }
 
 /** An empty value for a field, for a new item in a list. */

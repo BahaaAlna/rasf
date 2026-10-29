@@ -16,7 +16,7 @@ import { site } from '../data/site';
 import { hero } from '../data/hero';
 import { ui } from '../data/ui';
 import { origin } from '../data/origin';
-import { work } from '../data/work';
+import { work, type WorkProject } from '../data/work';
 import { services } from '../data/services';
 import { about, TOOLS } from '../data/about';
 import { contact } from '../data/contact';
@@ -107,8 +107,40 @@ export function getOrigin(locale: Locale) {
 
 export type OriginSection = ReturnType<typeof getOrigin>;
 
+/*
+  The projects, from the dashboard's own list (content/projects) once it
+  has one: each project written once, its words in both languages. A
+  project without a name in this language isn't shown in it. Before that
+  list exists, the projects are the ones in src/data/work.ts, or those an
+  older dashboard saved inside the Work section.
+*/
+function savedProjects(locale: Locale): WorkProject[] | null {
+  const items = saved.projects?.items;
+  if (!Array.isArray(items)) return null;
+  return items
+    .filter((item): item is Values => isObject(item) && isObject(item[locale]) && Boolean((item[locale] as Values).name))
+    .map((item) => {
+      const own = item[locale] as Values;
+      return {
+        slug: String(item.slug ?? ''),
+        category: item.category === 'design' ? 'design' : 'software',
+        link: String(item.link ?? ''),
+        year: String(item.year ?? ''),
+        // Without a picture of its own (a protected project, say), the studio's.
+        image: String(item.image || '/work/placeholder.svg'),
+        gallery: Array.isArray(item.gallery) ? item.gallery.map(String) : [],
+        name: String(own.name ?? ''),
+        kind: String(own.kind ?? ''),
+        summary: String(own.summary ?? ''),
+        body: String(own.body ?? ''),
+        scope: Array.isArray(own.scope) ? own.scope.map(String) : [],
+      };
+    });
+}
+
 export function getWork(locale: Locale) {
-  return words('work', work, locale);
+  const text = words('work', work, locale);
+  return { ...text, projects: savedProjects(locale) ?? text.projects };
 }
 
 export type WorkSection = ReturnType<typeof getWork>;

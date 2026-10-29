@@ -1,0 +1,10 @@
+---
+import BlogIndex from '../../../../components/blog/BlogIndex.astro';
+import { listPaths } from '../../../../lib/blog';
+
+export const getStaticPaths = () => listPaths('en');
+
+const { page } = Astro.props;
+---
+
+<BlogIndex locale="en" page={page} />

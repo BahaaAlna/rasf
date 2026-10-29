@@ -151,6 +151,19 @@ export default function Header({
     [place],
   );
 
+  /*
+    Inside Work's menu the dot only moves between words: passing from
+    Work to a page, or from one page to the next, never sends it home on
+    the way. It goes home once the pointer leaves the menu as a whole.
+  */
+  const inMenu = useRef(false);
+  const stay = useCallback(
+    (field: HTMLElement | null) => {
+      if (field || !inMenu.current) visit(field);
+    },
+    [visit],
+  );
+
   useEffect(() => {
     place();
 
@@ -197,8 +210,16 @@ export default function Header({
       <nav className={styles.nav}>
         {items.map((item) =>
           item.menu ? (
-            <div key={item.href} className={styles.menu}>
-              <RepelLink href={item.href} onActivate={visit}>
+            <div
+              key={item.href}
+              className={styles.menu}
+              onPointerEnter={() => (inMenu.current = true)}
+              onPointerLeave={() => {
+                inMenu.current = false;
+                visit(null);
+              }}
+            >
+              <RepelLink href={item.href} onActivate={stay}>
                 {item.label}
               </RepelLink>
               <div className={styles.menuPanel}>
@@ -209,7 +230,7 @@ export default function Header({
                         className={styles.menuLink}
                         href={entry.href}
                         onPointerEnter={(e) => visit(e.currentTarget)}
-                        onPointerLeave={() => visit(null)}
+                        onPointerLeave={() => stay(null)}
                         onFocus={(e) => visit(e.currentTarget)}
                         onBlur={() => visit(null)}
                       >

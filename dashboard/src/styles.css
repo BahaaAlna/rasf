@@ -724,13 +724,187 @@ textarea:lang(ar) {
   color: var(--accent);
 }
 
+/* A second line under a row's title: its English name and address. */
+.table__sub {
+  display: block;
+  margin-block-start: 0.15rem;
+  font-size: 0.72rem;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.table__link {
+  text-transform: none;
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 0.2em;
+}
+
+.table__link:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+
+/* ---- A project's page: numbered parts ------------------------------- */
+
+.part {
+  display: grid;
+  gap: var(--space-md);
+  padding-block: var(--space-lg);
+  border-block-start: 1px solid var(--rule);
+}
+
+.part__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  color: var(--ink);
+}
+
+.part__title span {
+  color: var(--accent);
+}
+
+.part__lead {
+  margin-block-start: calc(var(--space-sm) * -1);
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+}
+
+/* The four details side by side when there's room. */
+.part__grid {
+  display: grid;
+  gap: var(--space-md) var(--space-lg);
+}
+
+@media (min-width: 60rem) {
+  .part__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.part--end {
+  justify-items: start;
+}
+
+.tabs__empty {
+  font-size: 0.68rem;
+  text-transform: none;
+}
+
+/* The post's number in the list, quiet, like the site's section numbers. */
+.table__num {
+  inline-size: 3.5rem;
+  color: var(--ink-muted);
+}
+
 /* The address and language columns only once there's room. */
 @media (max-width: 50rem) {
-  .table th:nth-child(2),
-  .table td:nth-child(2),
   .table th:nth-child(3),
-  .table td:nth-child(3) {
+  .table td:nth-child(3),
+  .table th:nth-child(4),
+  .table td:nth-child(4) {
     display: none;
+  }
+}
+
+/* ---- Pages of a list, as on the website's blog ---------------------- */
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-block-start: var(--space-lg);
+}
+
+.pager__pages {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+/* The open page wears the dot under its number. */
+.pager__page {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-inline-size: 2.75rem;
+  block-size: 2.75rem;
+  padding-inline: var(--space-xs);
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-muted);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    color var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+
+.pager__page:hover,
+.pager__page:focus-visible {
+  color: var(--ink);
+  background: var(--paper-sunk);
+}
+
+.pager__page[aria-current='page'] {
+  color: var(--ink);
+}
+
+.pager__page[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  inset-block-end: 0.3rem;
+  inset-inline-start: 50%;
+  inline-size: 0.32rem;
+  block-size: 0.32rem;
+  margin-inline-start: -0.16rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.pager__step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.5rem 1.1rem;
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    color var(--dur) var(--ease),
+    background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.pager__step:hover:not(:disabled),
+.pager__step:focus-visible {
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+/* Kept in place at the ends, so the numbers never shift. */
+.pager__step--off {
+  visibility: hidden;
+}
+
+/* On a narrow screen the steps go to a row of their own under the numbers. */
+@media (max-width: 30rem) {
+  .pager {
+    flex-wrap: wrap;
+  }
+
+  .pager__pages {
+    order: -1;
+    flex-basis: 100%;
+    justify-content: center;
   }
 }
 

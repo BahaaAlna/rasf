@@ -19,6 +19,12 @@ export interface BlogContent {
   back: string;
   /** Under a post: the way to the contact form. */
   next: { label: string; cta: string };
+  /**
+   * The list's pages, eight posts to a page. `page` names one ("{n}" is
+   * its number), in the tab title and to screen readers; `label` names
+   * the row of page links.
+   */
+  pages: { label: string; page: string; previous: string; next: string };
 }
 
 export const blog: Record<Locale, BlogContent> = {
@@ -29,6 +35,7 @@ export const blog: Record<Locale, BlogContent> = {
     readingTime: '{n} دقائق قراءة',
     back: 'كل المقالات',
     next: { label: 'عندك فكرة؟', cta: 'ابدأ مشروعك' },
+    pages: { label: 'صفحات المقالات', page: 'صفحة {n}', previous: 'السابق', next: 'التالي' },
   },
   en: {
     heading: 'Blog.',
@@ -37,5 +44,6 @@ export const blog: Record<Locale, BlogContent> = {
     readingTime: '{n} min read',
     back: 'All posts',
     next: { label: 'Have an idea?', cta: 'Start a project' },
+    pages: { label: 'Pages of posts', page: 'Page {n}', previous: 'Previous', next: 'Next' },
   },
 };

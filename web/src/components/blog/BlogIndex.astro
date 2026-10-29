@@ -3,23 +3,41 @@
   The blog's list page, once for both languages. A big heading like the
   home page's sections, a line about what's here, then the posts newest
   first: date, title and description in a row, hairlines between.
+
+  Eight posts to a page (PER_PAGE). The first page is /blog; the rest are
+  /blog/page/2 and on, each its own page for search engines, with a row
+  of page links under the list. With eight posts or fewer there's one
+  page and no row at all.
 */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../layout/Header/SiteHeader.astro';
 import PageFoot from './PageFoot.astro';
 import { getSite, getUI } from '../../lib/content';
-import { getBlog, getPosts, postHref, formatDate } from '../../lib/blog';
+import { getBlog, getPosts, postHref, formatDate, PER_PAGE, pageCount, listPath } from '../../lib/blog';
 import { localizePath, otherLocale, type Locale } from '../../lib/i18n';
 
 interface Props {
   locale: Locale;
+  /** Which page of the list, from 1. */
+  page?: number;
 }
 
-const { locale } = Astro.props;
+const { locale, page = 1 } = Astro.props;
 const ui = getUI(locale);
 const copy = getBlog(locale);
 const home = { name: getSite(locale).name, path: '/' };
-const posts = await getPosts(locale);
+const all = await getPosts(locale);
+const pages = pageCount(all.length);
+const posts = all.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+const number = (n: number) => n.toLocaleString(locale === 'ar' ? 'ar-EG' : 'en');
+const pageName = (n: number) => copy.pages.page.replace('{n}', number(n));
+const path = listPath(page);
+
+// The other language may have fewer pages; past its last, switch to its first.
+const other = otherLocale(locale);
+const otherPages = pageCount((await getPosts(other)).length);
+const switchHref = localizePath(page <= otherPages ? path : '/blog', other);
 
 // The closing full stop takes the accent, as it does across the site.
 const heading = copy.heading.trim();
@@ -27,8 +45,14 @@ const stop = heading.endsWith('.');
 const headingText = stop ? heading.slice(0, -1) : heading;
 ---
 
-<BaseLayout path="/blog" title={ui.nav.blog} description={copy.intro} trail={[home]}>
-  <SiteHeader slot="header" locale={locale} switchHref={localizePath('/blog', otherLocale(locale))} />
+<BaseLayout
+  path={path}
+  title={page > 1 ? `${ui.nav.blog} · ${pageName(page)}` : ui.nav.blog}
+  description={copy.intro}
+  translated={page <= otherPages}
+  trail={page > 1 ? [home, { name: ui.nav.blog, path: '/blog' }] : [home]}
+>
+  <SiteHeader slot="header" locale={locale} switchHref={switchHref} />
 
   <section class="blog u-wrap" aria-labelledby="blog-title">
     <h1 id="blog-title" class="blog__heading" data-reveal>
@@ -56,6 +80,59 @@ const headingText = stop ? heading.slice(0, -1) : heading;
             </li>
           ))}
         </ol>
+      )
+    }
+
+    {
+      pages > 1 && (
+        <nav class="pager" aria-label={copy.pages.label}>
+          {page > 1 ? (
+            <a class="pager__step u-mono" href={localizePath(listPath(page - 1), locale)} rel="prev">
+              <svg class="u-flip" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 12H5M11 6l-6 6 6 6" />
+              </svg>
+              {copy.pages.previous}
+            </a>
+          ) : (
+            <span class="pager__step pager__step--off u-mono" aria-hidden="true">
+              <svg class="u-flip" viewBox="0 0 24 24">
+                <path d="M20 12H5M11 6l-6 6 6 6" />
+              </svg>
+              {copy.pages.previous}
+            </span>
+          )}
+
+          <ol class="pager__pages">
+            {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
+              <li>
+                <a
+                  class="pager__page u-mono"
+                  href={localizePath(listPath(n), locale)}
+                  aria-label={pageName(n)}
+                  aria-current={n === page ? 'page' : undefined}
+                >
+                  {number(n)}
+                </a>
+              </li>
+            ))}
+          </ol>
+
+          {page < pages ? (
+            <a class="pager__step u-mono" href={localizePath(listPath(page + 1), locale)} rel="next">
+              {copy.pages.next}
+              <svg class="u-flip" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 12h15M13 6l6 6-6 6" />
+              </svg>
+            </a>
+          ) : (
+            <span class="pager__step pager__step--off u-mono" aria-hidden="true">
+              {copy.pages.next}
+              <svg class="u-flip" viewBox="0 0 24 24">
+                <path d="M4 12h15M13 6l6 6-6 6" />
+              </svg>
+            </span>
+          )}
+        </nav>
       )
     }
   </section>
@@ -182,5 +259,103 @@ const headingText = stop ? heading.slice(0, -1) : heading;
 
   :global([dir='rtl']) .post__link:hover .post__arrow {
     translate: -0.35rem 0;
+  }
+
+  /* ---- The row of pages: previous, the numbers, next ---------------- */
+
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    margin-block-start: var(--space-xl);
+  }
+
+  .pager__pages {
+    display: flex;
+    gap: var(--space-2xs);
+  }
+
+  /* The open page wears the dot under its number, like the header's links. */
+  .pager__page {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-inline-size: 2.75rem;
+    block-size: 2.75rem;
+    padding-inline: var(--space-xs);
+    color: var(--ink-muted);
+    border-radius: var(--radius-pill);
+    transition:
+      color var(--dur-base) var(--ease-out-power3),
+      background var(--dur-base) var(--ease-out-power3);
+  }
+
+  .pager__page:hover,
+  .pager__page:focus-visible {
+    color: var(--ink);
+    background: var(--paper-sunk);
+  }
+
+  .pager__page[aria-current='page'] {
+    color: var(--ink);
+  }
+
+  .pager__page[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    inset-block-end: 0.3rem;
+    inset-inline-start: 50%;
+    inline-size: 0.32rem;
+    block-size: 0.32rem;
+    margin-inline-start: -0.16rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .pager__step {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-md);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-pill);
+    transition:
+      color var(--dur-base) var(--ease-out-power4),
+      background var(--dur-base) var(--ease-out-power4),
+      border-color var(--dur-base) var(--ease-out-power4);
+  }
+
+  a.pager__step:hover,
+  a.pager__step:focus-visible {
+    color: var(--paper);
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  /* Kept in place at the ends, so the numbers never shift. */
+  .pager__step--off {
+    visibility: hidden;
+  }
+
+  .pager__step svg {
+    inline-size: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+
+  /* On a phone the steps go to a row of their own under the numbers. */
+  @media (max-width: 30rem) {
+    .pager {
+      flex-wrap: wrap;
+    }
+
+    .pager__pages {
+      order: -1;
+      flex-basis: 100%;
+      justify-content: center;
+    }
   }
 </style>

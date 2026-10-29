@@ -56,6 +56,13 @@ export interface ImportResult {
   posts: string[];
 }
 
+/** Posts written as files that aren't in the dashboard yet, by slug. */
+export async function waitingPosts(): Promise<string[]> {
+  const waiting: string[] = [];
+  for (const slug of filePosts().keys()) if (!(await postExists(slug))) waiting.push(slug);
+  return waiting;
+}
+
 export async function importAll(): Promise<ImportResult> {
   const result: ImportResult = { sections: [], posts: [] };
 

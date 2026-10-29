@@ -4,7 +4,7 @@ import { usePosts } from './posts/usePosts';
 import { titleOf } from '../lib/posts';
 import { sectionDates } from '../lib/content';
 import { SECTIONS } from '../content/sections';
-import { importAll, type ImportResult } from '../content/importAll';
+import { importAll, waitingPosts, type ImportResult } from '../content/importAll';
 
 const when = (date: Date) => date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -16,14 +16,20 @@ export default function Overview() {
   const [importing, setImporting] = useState(false);
   const [imported, setImported] = useState<ImportResult | null>(null);
   const [importError, setImportError] = useState('');
+  /** Posts written as files, not brought in yet. */
+  const [waiting, setWaiting] = useState<string[]>([]);
 
   useEffect(() => {
     sectionDates()
       .then(setDates)
       .catch(() => setDates({}));
+    waitingPosts()
+      .then(setWaiting)
+      .catch(() => setWaiting([]));
   }, [version]);
 
   const unsaved = dates ? SECTIONS.filter((s) => !(s.id in dates)).length : 0;
+  const waitingCount = waiting.length;
 
   async function bringIn() {
     setImporting(true);
@@ -64,6 +70,22 @@ export default function Overview() {
           </div>
           <button className="button" type="button" onClick={bringIn} disabled={importing}>
             {importing ? 'Bringing it in…' : 'Bring everything in'}
+          </button>
+        </section>
+      )}
+      {dates && unsaved === 0 && waitingCount > 0 && !imported && (
+        <section className="import">
+          <div>
+            <h2 className="import__title">
+              {waitingCount} new post{waitingCount > 1 ? 's' : ''} written as files
+            </h2>
+            <p className="import__text">
+              They aren’t in the dashboard yet. This brings them in as they are, drafts staying drafts, so you can read
+              them in Posts, edit them, and publish the ones you want. Nothing already here is changed.
+            </p>
+          </div>
+          <button className="button" type="button" onClick={bringIn} disabled={importing}>
+            {importing ? 'Bringing them in…' : 'Bring them in'}
           </button>
         </section>
       )}

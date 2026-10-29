@@ -9,6 +9,8 @@ import PostEditor from './pages/posts/PostEditor';
 import SectionEditor from './pages/content/SectionEditor';
 import Messages from './pages/Messages';
 import Settings from './pages/Settings';
+import ProjectsList from './pages/work/ProjectsList';
+import ProjectEditor from './pages/work/ProjectEditor';
 
 /*
   Every screen sits behind the same gate: someone must be signed in, and
@@ -47,6 +49,9 @@ export default function App() {
         <Route path="content/:id" element={<SectionEditor />} />
         <Route path="messages" element={<Messages />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="projects" element={<ProjectsList />} />
+        <Route path="projects/new" element={<ProjectEditor />} />
+        <Route path="projects/:slug" element={<ProjectEditor />} />
         <Route path="posts" element={<PostsList />} />
         <Route path="posts/new" element={<PostEditor />} />
         <Route path="posts/:slug" element={<PostEditor />} />

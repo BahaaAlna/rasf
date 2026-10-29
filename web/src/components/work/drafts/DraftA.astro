@@ -40,7 +40,7 @@ const number = (n: number) => n.toLocaleString(locale === 'ar' ? 'ar-EG' : 'en',
             <span class="zig__n u-mono">{number(i + 1)}</span>
             <span class="zig__name">{project.name}</span>
             <span class="zig__meta u-mono">
-              {project.kind} · {project.year}
+              {[project.kind, project.year].filter(Boolean).join(' · ')}
             </span>
             {project.summary && <span class="zig__summary">{project.summary}</span>}
             <svg class="zig__go u-flip" viewBox="0 0 24 24" aria-hidden="true">

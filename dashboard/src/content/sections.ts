@@ -141,8 +141,8 @@ export const SECTIONS: Section[] = [
   },
   {
     id: 'work',
-    title: 'Work',
-    description: 'A few words about the studio and the list of projects, here and on the Software and Designs pages.',
+    title: 'Work page',
+    description: 'The words around the projects: the intro, the labels, and the lines on the Software and Designs pages. The projects themselves are under Projects.',
     words: [
       text('intro', 'Intro', { long: true }),
       text('listLabel', 'Label above the list'),
@@ -162,48 +162,9 @@ export const SECTIONS: Section[] = [
           text('next', 'Link to the next project'),
         ],
       },
-      {
-        kind: 'items',
-        key: 'projects',
-        label: 'Projects',
-        itemName: 'project',
-        fields: [
-          text('name', 'Name'),
-          {
-            kind: 'choice',
-            key: 'category',
-            label: 'Listed under',
-            hint: 'Which page under Work shows it. Every project also shows on the home page.',
-            options: [
-              { value: 'software', label: 'Software' },
-              { value: 'design', label: 'Designs' },
-            ],
-          },
-          text('kind', 'Kind of work', { hint: 'Website, web app, identity…' }),
-          text('summary', 'Summary', {
-            long: true,
-            hint: 'One or two sentences, beside its picture on the Software and Designs pages.',
-          }),
-          text('body', 'Text on its page', {
-            long: true,
-            hint: 'Leave a blank line between paragraphs. ## starts a heading, - a list item, [words](https://…) a link.',
-          }),
-          { kind: 'lines', key: 'scope', label: 'What we did', hint: 'One per line, beside the text on its page.' },
-          text('link', 'Live link', { ltr: true, hint: 'The finished site, if it can be visited. Leave empty for none.' }),
-          {
-            kind: 'lines',
-            key: 'gallery',
-            label: 'More pictures',
-            ltr: true,
-            hint: 'One path per line, like /work/name-2.jpg, shown after the text.',
-          },
-          text('year', 'Year'),
-          text('slug', 'Page address', { ltr: true, hint: 'The project’s page: /work/<this>. Same in both languages; not “software” or “designs”.' }),
-          text('image', 'Picture', { ltr: true, hint: 'Shown on hover. A path like /work/name.jpg, about 4:3.' }),
-        ],
-      },
     ],
     current: () => both(work),
+    moved: ['projects'],
   },
   {
     id: 'services',
@@ -306,6 +267,17 @@ export const SECTIONS: Section[] = [
         key: 'next',
         label: 'Under each post',
         fields: [text('label', 'Line'), text('cta', 'Link to Contact')],
+      },
+      {
+        kind: 'group',
+        key: 'pages',
+        label: 'Pages of the list (eight posts each)',
+        fields: [
+          text('label', 'Name of the row of pages', { hint: 'Read out by screen readers.' }),
+          text('page', 'One page', { hint: '{n} becomes its number.' }),
+          text('previous', 'Previous'),
+          text('next', 'Next'),
+        ],
       },
     ],
     current: () => both(blog),

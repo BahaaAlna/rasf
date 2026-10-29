@@ -61,6 +61,13 @@ export default function Shell() {
               ))}
             </ul>
 
+            <p className="side__group mono">Work</p>
+            <ul className="side__list">
+              <Item to="/projects" mark={<Glyph d="M2.5 5h11v8h-11zM6 5V3h4v2M2.5 8.5h11" />}>
+                Projects
+              </Item>
+            </ul>
+
             <p className="side__group mono">Blog</p>
             <ul className="side__list">
               <Item to="/posts" mark={<Glyph d="M10.5 3 13 5.5 6 12.5H3.5V10zM9 4.5l2.5 2.5" />}>

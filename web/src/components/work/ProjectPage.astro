@@ -74,7 +74,7 @@ const gallery = project.gallery?.filter(Boolean) ?? [];
         {project.name}<span class="project__dot">.</span>
       </h1>
       <p class="project__meta u-mono" data-reveal style="--reveal-delay: 0.06s">
-        {project.kind} · {project.year}
+        {[project.kind, project.year].filter(Boolean).join(' · ')}
       </p>
       {
         project.summary && (
@@ -99,10 +99,14 @@ const gallery = project.gallery?.filter(Boolean) ?? [];
             <dt class="u-mono">{words.kind}</dt>
             <dd>{project.kind}</dd>
           </div>
-          <div class="facts__row">
-            <dt class="u-mono">{words.year}</dt>
-            <dd>{project.year}</dd>
-          </div>
+          {
+            project.year && (
+              <div class="facts__row">
+                <dt class="u-mono">{words.year}</dt>
+                <dd>{project.year}</dd>
+              </div>
+            )
+          }
           {
             scope.length > 0 && (
               <div class="facts__row">

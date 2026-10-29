@@ -6,9 +6,13 @@
   - Markdown files, one per post, in a folder per language:
     src/content/blog/ar/ and src/content/blog/en/.
 
-  Once the dashboard holds any posts, the blog is exactly those: a post
-  deleted there is gone from the site, whatever files remain. The files
-  are used only while the dashboard has none, or can't be reached.
+  Once the dashboard holds any posts, the blog is those, and a post
+  deleted there is gone from the site whatever files remain. The files
+  then add only their drafts not yet in the dashboard: new posts written
+  as files, to read in `astro dev` before the dashboard brings them in
+  (its Overview offers to) and they're published from there. Drafts never
+  reach the live site. While the dashboard has no posts, or can't be
+  reached, the files are the whole blog.
 
   Either way an entry's id is `{language}/{slug}`, and the slug is its
   address: ar/hello is /blog/hello, en/hello is /en/blog/hello. A post
@@ -32,7 +36,15 @@ const blog = defineCollection({
         return;
       }
 
-      context.store.clear();
+      // The files first; then all but their drafts new to the dashboard go.
+      await files.load(context);
+      const remote = new Set(posts.map((post) => post.slug));
+      for (const id of [...context.store.keys()]) {
+        const entry = context.store.get(id);
+        const slug = id.slice(id.indexOf('/') + 1);
+        if (remote.has(slug) || !entry?.data.draft) context.store.delete(id);
+      }
+
       for (const post of posts) {
         for (const lang of ['ar', 'en'] as const) {
           const version = post[lang];

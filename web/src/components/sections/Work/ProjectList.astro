@@ -26,7 +26,7 @@ const number = (n: number) => n.toLocaleString(locale === 'ar' ? 'ar-EG' : 'en',
             <span class="row__n u-mono">{number(i + 1)}</span>
             <span class="row__name">{project.name}</span>
             <span class="row__meta u-mono">
-              {project.kind} · {project.year}
+              {[project.kind, project.year].filter(Boolean).join(' · ')}
             </span>
             <svg class="row__arrow u-flip" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M4 12h15M13 6l6 6-6 6" />

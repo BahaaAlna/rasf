@@ -99,10 +99,13 @@ function SectionEditor({ id }: { id: string }) {
     if (!value || !section) return;
     setBusy(true);
     setError('');
+    // What has moved out of this section (Work's projects) isn't written back.
+    const keep = (words: Values) =>
+      Object.fromEntries(Object.entries(words).filter(([key]) => !section.moved?.includes(key)));
     const next: SectionDoc = {
       ...tidy(section.shared ?? [], value),
-      ar: tidy(section.words, value.ar),
-      en: tidy(section.words, value.en),
+      ar: keep(tidy(section.words, value.ar)),
+      en: keep(tidy(section.words, value.en)),
     };
     try {
       await saveSection(section.id, next);
