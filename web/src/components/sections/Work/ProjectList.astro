@@ -40,12 +40,14 @@ const number = (n: number) => n.toLocaleString(locale === 'ar' ? 'ar-EG' : 'en',
   {/*
     The pictures, one per project, stacked so moving between rows is a
     cross-fade rather than a swap. Decorative: each row already says
-    what the project is, so they are hidden from assistive tech.
+    what the project is, so they are hidden from assistive tech. They
+    only download when the list comes near, and never on touch, where
+    they don't show (floatingShot.ts).
   */}
   <figure class="shot" aria-hidden="true">
     {
       projects.map((project, i) => (
-        <img src={project.image} alt="" width="800" height="600" decoding="async" data-shot={i} />
+        <img data-src={project.image} alt="" width="800" height="600" decoding="async" data-shot={i} />
       ))
     }
   </figure>

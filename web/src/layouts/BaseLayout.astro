@@ -8,6 +8,7 @@ import Maintenance from '../components/layout/Maintenance.astro';
 import Loader from '../components/layout/Loader.astro';
 import { getMaintenance, getSite } from '../lib/content';
 import { absolute, graph, jsonLd, pageUrl, type Crumb, type PageKind } from '../lib/seo';
+import '../styles/fonts.css';
 import '../styles/global.css';
 
 interface Props {
@@ -111,12 +112,16 @@ const structured = graph({ locale, path, title: title ?? pageTitle, description,
 
     <script type="application/ld+json" set:html={jsonLd(structured)} />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=IBM+Plex+Mono:wght@400&family=Lateef:wght@400;600&display=swap"
-    />
+    {/* The fonts the first screen is set in, fetched alongside the page (styles/fonts.css). */}
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin-11f6ab2d.woff2" as="font" type="font/woff2" crossorigin />
+    {
+      locale === 'ar' && (
+        <>
+          <link rel="preload" href="/fonts/lateef-arabic-69a04347.woff2" as="font" type="font/woff2" crossorigin />
+          <link rel="preload" href="/fonts/lateef-arabic-cf42c32d.woff2" as="font" type="font/woff2" crossorigin />
+        </>
+      )
+    }
 
     <ClientRouter />
     <slot name="head" />

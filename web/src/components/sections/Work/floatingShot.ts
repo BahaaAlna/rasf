@@ -27,6 +27,20 @@ export function initFloatingShot() {
   if (root && shot && list && window.matchMedia('(hover: hover)').matches) {
     const still = !window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
     const shots = [...shot.querySelectorAll<HTMLImageElement>('img')];
+
+    // Fetched as the list comes within a screen of view, so they never
+    // hold up the page's first load.
+    const near = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        shots.forEach((img) => {
+          if (img.dataset.src) img.src = img.dataset.src;
+        });
+        near.disconnect();
+      },
+      { rootMargin: '100% 0px' },
+    );
+    near.observe(list);
     const pointer = { x: 0, y: 0 };
     const at = { x: 0, y: 0, vx: 0, vy: 0 };
     let on = false;
@@ -100,6 +114,13 @@ export function initFloatingShot() {
     list.addEventListener('pointerleave', hide);
     // Leaving the page mid-hover: stop the loop rather than let it keep
     // animating a picture that is about to be thrown away.
-    document.addEventListener('astro:before-swap', hide, { once: true });
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        hide();
+        near.disconnect();
+      },
+      { once: true },
+    );
   }
 }

@@ -1,15 +1,20 @@
 ---
 /*
-  While a page's fonts and pictures are still arriving: the name and the
-  slogan, and under them a hairline that fills as they land. It only ever
-  shows when there is a wait: a page that's ready within half a second
-  (a return visit, a fast connection) never shows it at all.
+  While a page is still arriving: the name and the slogan, and under them
+  a hairline that fills as it lands. It stays until everything the first
+  screen needs is in: the stylesheets and scripts, every picture that's
+  on screen (downloaded and decoded), the fonts, and the interactive
+  parts awake. Pictures further down are lazy, so they don't hold it up;
+  they arrive as the reader scrolls to them.
+
+  A page that's ready within half a second (a return visit, a fast
+  connection) never shows it at all, and it only ever runs on the first
+  page of a visit: moving between pages afterwards is a swap, not a load.
+  It never stays longer than 30 seconds whatever happens, and without
+  JavaScript it never appears, so nothing is stuck behind it.
 
   The picture is drawn as the site builds (lib/og.ts), so the screen
-  needs nothing that's still loading. It waits for the page's load and
-  then for its fonts, and never longer than a few seconds whatever
-  happens. Without JavaScript it never appears, so nothing is stuck
-  behind it.
+  needs nothing that's still loading.
 */
 import type { Locale } from '../../lib/i18n';
 import { LOADER } from '../../lib/og';
@@ -22,7 +27,7 @@ const { locale } = Astro.props;
 ---
 
 <script is:inline>
-  document.documentElement.classList.add('is-loading');
+  if (!window.__rasfLoaded) document.documentElement.classList.add('is-loading');
 </script>
 
 <div class="loader" id="loader" aria-hidden="true">
@@ -46,53 +51,106 @@ const { locale } = Astro.props;
     const fill = document.getElementById('loader-fill');
     if (!screen || !fill) return;
 
+    // A later page of the same visit: it's already all here.
+    if (window.__rasfLoaded) {
+      screen.remove();
+      return;
+    }
+
     let done = false;
     let shown = 0;
-    // Never stands still: creeps toward what's known so far, a little ahead of it.
+    // Only ever moves forward.
     const show = (part) => {
       shown = Math.max(shown, Math.min(part, 1));
       fill.style.transform = `scaleX(${shown})`;
     };
-    show(0.08);
+    show(0.05);
 
     const start = performance.now();
     const finish = () => {
       if (done) return;
       done = true;
+      window.__rasfLoaded = true;
+      // The page's own entrance plays as the screen lifts, not behind it.
+      root.classList.add('is-ready');
       // Ready before it was ever shown: gone at once, with no fade to glimpse.
       if (performance.now() - start < 450) {
-        root.classList.remove('is-loading');
+        root.classList.remove('is-loading', 'is-ready');
         screen.remove();
         return;
       }
       show(1);
       screen.classList.add('loader--out');
       setTimeout(() => {
-        root.classList.remove('is-loading');
+        root.classList.remove('is-loading', 'is-ready');
         screen.remove();
       }, 520);
     };
 
-    // The pictures on the page, counted as they land, once the page is read.
-    const count = () => {
-      const images = [...document.images].filter((img) => !img.closest('#loader'));
-      const total = images.length + 1;
-      let landed = images.filter((img) => img.complete).length;
-      show(0.15 + (0.7 * landed) / total);
-      images.forEach((img) => {
-        if (img.complete) return;
-        const one = () => show(0.15 + (0.7 * ++landed) / total);
-        img.addEventListener('load', one, { once: true });
-        img.addEventListener('error', one, { once: true });
-      });
-    };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', count, { once: true });
-    else count();
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const parsed = new Promise((r) =>
+      document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', r, { once: true }) : r(),
+    );
+    const loaded = new Promise((r) => (document.readyState === 'complete' ? r() : addEventListener('load', r, { once: true })));
 
-    // Done when the page has loaded and its fonts are in.
-    const loaded = document.readyState === 'complete' ? Promise.resolve() : new Promise((r) => addEventListener('load', r, { once: true }));
-    loaded.then(() => (document.fonts ? document.fonts.ready : null)).then(finish, finish);
-    setTimeout(finish, 6000);
+    // On screen: laid out, and inside the first screenful. A lazy picture
+    // further down waits for the reader; one that's hidden never loads.
+    const onScreen = (img) => {
+      if (!img.getClientRects().length) return false;
+      const box = img.getBoundingClientRect();
+      return box.bottom > 0 && box.top < innerHeight && box.right > 0 && box.left < innerWidth;
+    };
+
+    // Each picture that counts: downloaded, then decoded, so it paints whole.
+    const pictures = parsed.then(() => {
+      const images = [...document.images].filter(
+        (img) => !img.closest('#loader') && (img.loading !== 'lazy' || onScreen(img)),
+      );
+      let landed = 0;
+      const one = () => show(0.1 + (0.6 * ++landed) / Math.max(images.length, 1));
+      return Promise.all(
+        images.map((img) =>
+          (img.complete
+            ? Promise.resolve()
+            : new Promise((r) => {
+                img.addEventListener('load', r, { once: true });
+                img.addEventListener('error', r, { once: true });
+              })
+          )
+            .then(() => (img.naturalWidth ? img.decode() : null))
+            .catch(() => null)
+            .then(one),
+        ),
+      );
+    });
+
+    // Every font the page has started on, then whatever its text still needs.
+    const fonts = () =>
+      document.fonts
+        ? Promise.all([...document.fonts].filter((f) => f.status === 'loading').map((f) => f.loaded.catch(() => null))).then(
+            () => document.fonts.ready,
+          )
+        : null;
+
+    // The interactive parts: Astro drops `ssr` from an island once it's awake.
+    // Islands that wake on sight are left to wake when they're seen.
+    const awake = async () => {
+      const asleep = () =>
+        [...document.querySelectorAll('astro-island[ssr]')].some((island) => {
+          const when = island.getAttribute('client');
+          return when === 'load' || when === 'idle';
+        });
+      for (let i = 0; i < 100 && asleep(); i++) await wait(100);
+    };
+
+    Promise.all([pictures, loaded.then(() => show(0.8))])
+      .then(fonts)
+      .then(() => show(0.9))
+      .then(awake)
+      // One frame for everything to paint before it's revealed.
+      .then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
+      .then(finish, finish);
+    setTimeout(finish, 30000);
   })();
 </script>
 
@@ -103,6 +161,12 @@ const { locale } = Astro.props;
 
   :global(html.is-loading) {
     overflow: hidden;
+  }
+
+  /* The page's own entrances hold their first frame until the screen lifts. */
+  :global(html.is-loading:not(.is-ready) body > :not(.loader)),
+  :global(html.is-loading:not(.is-ready) body > :not(.loader) *) {
+    animation-play-state: paused !important;
   }
 
   :global(html.is-loading) .loader {

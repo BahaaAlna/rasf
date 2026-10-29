@@ -91,7 +91,7 @@ const gallery = project.gallery?.filter(Boolean) ?? [];
 
     <figure class="project__hero u-wrap" data-reveal>
       <span class="project__pic">
-        <img src={project.image} alt={project.name} width="1600" height="1000" decoding="async" />
+        <img src={project.image} alt={project.name} width="1600" height="1000" fetchpriority="high" decoding="async" />
       </span>
     </figure>
 
