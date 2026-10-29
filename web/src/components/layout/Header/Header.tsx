@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import RepelLink from './RepelLink';
 import { LOGO_DOT } from '../../../lib/logo/dot';
+import { getLenis } from '../../../lib/lenis';
 import styles from './Header.module.css';
 
 export interface HeaderProps {
@@ -27,6 +28,8 @@ export interface HeaderProps {
   locale: 'ar' | 'en';
   /** The dot artwork — the travelling copy, not the one in the logo. */
   dot: { src: string; width: number; height: number };
+  /** The phone menu's button, closed and open. */
+  menuLabels: { open: string; close: string };
 }
 
 /** Clear of the descenders, so the dot never touches the word. */
@@ -49,7 +52,11 @@ const DROP = 6;
  * hydration too; once hydrated, the dot follows into the menu and settles
  * under whichever page the pointer is on, as it does for the bar's words.
  *
- * Temporary: no mobile menu yet, the nav simply hides below 48rem.
+ * On a phone (48rem and under) the bar keeps only the logo and a Menu
+ * button. It opens a sheet over the page, under the bar: every link,
+ * large and numbered, Work's pages beneath it, and the language switch.
+ * A link, the button again, or Escape closes it; the page behind is held
+ * still while it's open.
  */
 export default function Header({
   logo,
@@ -63,6 +70,7 @@ export default function Header({
   home,
   blogHref,
   workMenu,
+  menuLabels,
 }: HeaderProps) {
   const section = (id: string) => `${home ?? ''}#${id}`;
   const items: { href: string; label: string; menu?: HeaderProps['workMenu'] }[] = [
@@ -194,7 +202,39 @@ export default function Header({
     };
   }, [place]);
 
+  const [open, setOpen] = useState(false);
+  const sheet = useRef<HTMLElement>(null);
+
+  // While the sheet is open: the page behind stays still, Escape closes it.
+  useEffect(() => {
+    if (!open) return;
+    const lenis = getLenis();
+    lenis?.stop();
+    document.documentElement.style.overflow = 'hidden';
+    sheet.current?.querySelector('a')?.focus({ preventScroll: true });
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.documentElement.style.overflow = '';
+      lenis?.start();
+    };
+  }, [open]);
+
+  /*
+    Picking a link closes the sheet. Smooth scrolling is let go first, in
+    the same moment: the jump to a section on this page goes through it,
+    and runs before the sheet has finished closing.
+  */
+  const pick = () => {
+    getLenis()?.start();
+    document.documentElement.style.overflow = '';
+    setOpen(false);
+  };
+  const number = (n: number) => n.toLocaleString(locale === 'ar' ? 'ar-EG' : 'en', { minimumIntegerDigits: 2 });
+
   return (
+    <>
     <header ref={header} className={styles.header}>
       <a href={home ?? '#main'} aria-label={siteName}>
         <img
@@ -255,6 +295,17 @@ export default function Header({
         </span>
       </a>
 
+      <button
+        type="button"
+        className={styles.menuButton}
+        aria-expanded={open}
+        aria-controls="site-sheet"
+        onClick={() => setOpen(!open)}
+      >
+        <span className={styles.menuDot} aria-hidden="true" />
+        {open ? menuLabels.close : menuLabels.open}
+      </button>
+
       <img
         ref={dot}
         className={styles.dot}
@@ -265,5 +316,51 @@ export default function Header({
         aria-hidden="true"
       />
     </header>
+
+    {/*
+      The phone menu. Beside the bar, not in it: the bar's blur makes it
+      the box any fixed child is placed in, which would trap the sheet
+      inside the bar's own height.
+    */}
+    <nav
+      ref={sheet}
+      id="site-sheet"
+      className={styles.sheet}
+      data-open={open}
+      aria-label={menuLabels.open}
+      inert={!open}
+    >
+      <ol className={styles.sheetList}>
+        {items.map((item, i) => (
+          <li key={item.href} className={styles.sheetItem} style={{ '--i': i } as CSSProperties}>
+            <a className={styles.sheetLink} href={item.href} onClick={pick}>
+              <span className={styles.sheetN}>{number(i + 1)}</span>
+              {item.label}
+            </a>
+            {item.menu && (
+              <ul className={styles.sheetSub}>
+                {item.menu.map((entry) => (
+                  <li key={entry.href}>
+                    <a className={styles.sheetSubLink} href={entry.href} onClick={pick}>
+                      {entry.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ol>
+      <a
+        className={styles.switch + ' ' + styles.sheetSwitch}
+        href={switchHref}
+        hrefLang={switchLang}
+        lang={switchLang}
+        onClick={pick}
+      >
+        {switchLabel}
+      </a>
+    </nav>
+    </>
   );
 }

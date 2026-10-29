@@ -105,6 +105,12 @@ export const SECTIONS: Section[] = [
         fields: [text('viewWork', 'See the work'), text('contact', 'Start a project')],
       },
       text('switchTo', 'Language switch', { hint: 'The other language’s name, on the button in the header.' }),
+      {
+        kind: 'group',
+        key: 'menu',
+        label: 'Menu button on phones',
+        fields: [text('open', 'To open the menu'), text('close', 'To close it')],
+      },
       text('heroSupport', 'Line under the hero', { long: true }),
     ],
     current: () => both(ui),

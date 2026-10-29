@@ -195,3 +195,52 @@
   border: 0;
   clip-path: inset(50%);
 }
+
+/*
+  No hover to open the cards with, so on a touch screen the three answers
+  are simply shown: a short list under the laid word, faded in with the
+  question once the last stone is down.
+*/
+@media (hover: none) {
+  .plain {
+    inset-inline: var(--gutter);
+    inset-block-end: clamp(var(--space-md), 5vh, var(--space-xl));
+    display: grid;
+    gap: var(--space-sm);
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    white-space: normal;
+    clip-path: none;
+  }
+
+  .plain > div {
+    display: grid;
+    gap: 0.15rem;
+    padding-block-start: var(--space-xs);
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .plain dt {
+    font-size: var(--step-0);
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .plain dd {
+    margin: 0;
+    font-size: var(--step--1);
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+
+  :global([dir='rtl']) .plain dt {
+    font-size: calc(var(--step-0) * var(--ar-scale));
+  }
+
+  :global([dir='rtl']) .plain dd {
+    font-size: calc(var(--step--1) * var(--ar-scale));
+    line-height: calc(1.45 * var(--ar-leading));
+  }
+}

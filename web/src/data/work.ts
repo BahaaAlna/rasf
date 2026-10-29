@@ -44,6 +44,8 @@ export interface WorkProject {
   year: string;
   /** Shown on hover. A path under `public/`, ideally 4:3. */
   image: string;
+  /** One of the (at most four) projects on the home page; chosen in the dashboard. */
+  featured?: boolean;
 }
 
 export interface WorkContent {

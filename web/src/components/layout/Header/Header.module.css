@@ -136,10 +136,177 @@
   color: var(--paper);
 }
 
-/* Temporary: the mobile menu island replaces this in a later step. */
+/* ---- On a phone: the Menu button and its sheet ---------------------- */
+
+.menuButton {
+  display: none;
+}
+
 @media (max-width: 48rem) {
   .nav {
     display: none;
+  }
+
+  /* The switch moves into the sheet; the bar keeps the logo and Menu. */
+  .header .switch {
+    display: none;
+  }
+
+  .menuButton {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    min-block-size: 2.5rem;
+    padding: var(--space-2xs) var(--space-md);
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--ink);
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition:
+      background var(--dur-base) var(--ease-out-power4),
+      color var(--dur-base) var(--ease-out-power4),
+      border-color var(--dur-base) var(--ease-out-power4);
+  }
+
+  .menuButton[aria-expanded='true'] {
+    color: var(--paper);
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+}
+
+/* The dot again, on the button that opens the way to everything. */
+.menuDot {
+  inline-size: 0.4rem;
+  block-size: 0.4rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* Under the bar, over the page; faded and held in place while closed. */
+.sheet {
+  position: fixed;
+  inset: var(--header-h) 0 0;
+  z-index: 49;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  padding: var(--space-md) var(--gutter) var(--space-xl);
+  overflow-y: auto;
+  background: var(--paper);
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity var(--dur-base) var(--ease-out-power3),
+    visibility 0s linear var(--dur-base);
+}
+
+.sheet[data-open='true'] {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity var(--dur-base) var(--ease-out-power3);
+}
+
+/* Never on a wide screen, whatever its state. */
+@media (min-width: 48.0625rem) {
+  .sheet {
+    display: none;
+  }
+}
+
+.sheetList {
+  padding: 0;
+  list-style: none;
+  border-block-start: 1px solid var(--ink);
+}
+
+/* Each line rises in after the one before it. */
+.sheetItem {
+  border-block-end: 1px solid var(--rule);
+  opacity: 0;
+  transform: translateY(0.75rem);
+  transition:
+    opacity var(--dur-base) var(--ease-out-power3),
+    transform var(--dur-reveal) var(--ease-out-expo);
+}
+
+.sheet[data-open='true'] .sheetItem {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(var(--i) * 45ms + 60ms);
+}
+
+.sheetLink {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-md);
+  padding-block: var(--space-sm);
+  font-size: var(--step-2);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  transition: color var(--dur-fast) var(--ease-out-power3);
+}
+
+:global([dir='rtl']) .sheetLink {
+  font-size: calc(var(--step-2) * var(--ar-scale));
+  letter-spacing: 0;
+}
+
+.sheetLink:active,
+.sheetLink:focus-visible {
+  color: var(--accent);
+}
+
+.sheetN {
+  min-inline-size: 2ch;
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  letter-spacing: var(--tracking-mono);
+  color: var(--ink-muted);
+}
+
+/* Work's pages, under its name, in line with its words. */
+.sheetSub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs) var(--space-lg);
+  padding: 0 0 var(--space-sm);
+  padding-inline-start: calc(2ch + var(--space-md));
+  list-style: none;
+}
+
+.sheetSubLink {
+  display: inline-block;
+  padding-block: var(--space-2xs);
+  font-size: var(--step-1);
+  color: var(--ink-muted);
+}
+
+:global([dir='rtl']) .sheetSubLink {
+  font-size: calc(var(--step-1) * var(--ar-scale));
+}
+
+.sheetSubLink:active,
+.sheetSubLink:focus-visible {
+  color: var(--accent);
+}
+
+.sheetSwitch {
+  align-self: flex-start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet,
+  .sheetItem {
+    transition: none;
+  }
+
+  .sheetItem {
+    transform: none;
   }
 }
 

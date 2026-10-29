@@ -12,7 +12,7 @@
   The list itself, pictures and all, is ProjectList, which the Software
   and Designs pages use too.
 */
-import type { WorkSection } from '../../../lib/content';
+import { homeProjects, type WorkSection } from '../../../lib/content';
 import ProjectList from './ProjectList.astro';
 import { localizePath, type Locale } from '../../../lib/i18n';
 
@@ -35,7 +35,7 @@ const { locale, title, copy } = Astro.props;
 
     <div class="work__list">
       <p class="u-mono" data-reveal>{copy.listLabel}</p>
-      <ProjectList locale={locale} projects={copy.projects} />
+      <ProjectList locale={locale} projects={homeProjects(copy.projects)} />
       <a class="work__all u-mono" href={localizePath('/work/software', locale)} data-reveal data-weightless>
         <span class="work__all-label" data-weightless-label>
           {copy.allLabel}

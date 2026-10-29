@@ -40,6 +40,8 @@ export interface Project {
   image: string;
   /** More pictures on its page. */
   gallery: string[];
+  /** One of the projects on the home page (HOME_LIMIT at most). */
+  featured: boolean;
   ar: ProjectWords;
   en: ProjectWords;
 }
@@ -48,6 +50,9 @@ const ref = doc(db, 'content', 'projects');
 
 /** Its address: lowercase letters, digits and single hyphens, and not one of Work's own pages. */
 export const isSlug = (slug: string) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && !['software', 'designs'].includes(slug);
+
+/** How many projects the home page shows; the site shows the first ones until any are chosen. */
+export const HOME_LIMIT = 4;
 
 export const blankWords = (): ProjectWords => ({ name: '', kind: '', summary: '', body: '', scope: [] });
 
@@ -58,13 +63,14 @@ export const blankProject = (): Project => ({
   year: '',
   image: '',
   gallery: [],
+  featured: false,
   ar: blankWords(),
   en: blankWords(),
 });
 
 /** The projects from the site's own data, paired by address across the two languages. */
 function fromSite(): Project[] {
-  return work.ar.projects.map((ar) => {
+  return work.ar.projects.map((ar, i) => {
     const en = work.en.projects.find((p) => p.slug === ar.slug);
     const words = (p: typeof ar | undefined): ProjectWords =>
       p ? { name: p.name, kind: p.kind, summary: p.summary, body: p.body, scope: [...p.scope] } : blankWords();
@@ -75,6 +81,7 @@ function fromSite(): Project[] {
       year: ar.year,
       image: ar.image,
       gallery: [...ar.gallery],
+      featured: i < HOME_LIMIT,
       ar: words(ar),
       en: words(en),
     };
@@ -93,7 +100,8 @@ export async function getProjects(): Promise<StoredProjects> {
   if (!snap.exists()) return { projects: fromSite(), updatedAt: null, saved: false };
   const data = snap.data();
   return {
-    projects: (data.items as Project[]) ?? [],
+    // Saved before the home page could be chosen: `featured` is simply false.
+    projects: ((data.items as Project[]) ?? []).map((p) => ({ ...p, featured: p.featured === true })),
     updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : null,
     saved: true,
   };

@@ -13,6 +13,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../layout/Header/SiteHeader.astro';
 import PageFoot from './PageFoot.astro';
 import { getSite, getUI } from '../../lib/content';
+import { absolute } from '../../lib/seo';
 import { getBlog, postPath, slugOf, readingMinutes, formatDate, type Post } from '../../lib/blog';
 import { localizePath, otherLocale, type Locale } from '../../lib/i18n';
 
@@ -31,6 +32,7 @@ const { Content } = await render(post);
 const path = postPath(slugOf(post));
 const other = otherLocale(locale);
 const switchHref = localizePath(translated ? path : '/blog', other);
+const shareImage = `/og/blog/${locale}/${slugOf(post)}.png`;
 const minutes = readingMinutes(post).toLocaleString(locale === 'ar' ? 'ar-EG' : 'en');
 ---
 
@@ -41,7 +43,8 @@ const minutes = readingMinutes(post).toLocaleString(locale === 'ar' ? 'ar-EG' : 
   translated={translated}
   ogType="article"
   trail={[home, { name: getUI(locale).nav.blog, path: '/blog' }]}
-  kind={{ type: 'article', published: post.data.date }}
+  kind={{ type: 'article', published: post.data.date, image: absolute(shareImage) }}
+  image={shareImage}
 >
   <SiteHeader slot="header" locale={locale} switchHref={switchHref} />
 

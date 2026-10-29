@@ -11,6 +11,8 @@ export interface UIStrings {
   workPages: { software: string; designs: string };
   actions: { viewWork: string; contact: string };
   switchTo: string;
+  /** The button that opens and closes the menu on a phone. */
+  menu: { open: string; close: string };
   /** Supporting line under the hero sentence. TODO: confirm. */
   heroSupport: string;
 }
@@ -27,6 +29,7 @@ export const ui: Record<Locale, UIStrings> = {
     workPages: { software: 'برمجيات', designs: 'تصاميم' },
     actions: { viewWork: 'شاهد الأعمال', contact: 'ابدأ مشروعك' },
     switchTo: 'English',
+    menu: { open: 'القائمة', close: 'إغلاق' },
     heroSupport: 'استوديو برمجيات وتصميم. نبني المواقع وتطبيقات الويب كاملة، من أول فكرة حتى الإطلاق، ونصمم هوياتها.',
   },
   en: {
@@ -40,6 +43,7 @@ export const ui: Record<Locale, UIStrings> = {
     workPages: { software: 'Software', designs: 'Designs' },
     actions: { viewWork: 'View work', contact: 'Start a project' },
     switchTo: 'العربية',
+    menu: { open: 'Menu', close: 'Close' },
     heroSupport: 'A software and design studio. We build websites and web apps end to end, from the first idea to launch, and design the brands behind them.',
   },
 };

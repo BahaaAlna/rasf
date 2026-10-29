@@ -511,9 +511,10 @@ export default function Mosaic({ src, locale, copy }: Props) {
           The same three answers, always present and always readable.
           The cards open on hover alone, which is no use to a keyboard,
           a screen reader or a phone — the words must not live only
-          inside an interaction.
+          inside an interaction. On a touch screen they're shown, under
+          the word, once it's laid (see Mosaic.module.css).
         */}
-        <dl className={styles.plain}>
+        <dl className={styles.plain + ' ' + veil}>
           {copy.columns.map((column) => (
             <div key={column.n}>
               <dt>{column.title}</dt>

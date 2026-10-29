@@ -19,6 +19,7 @@ import SiteHeader from '../layout/Header/SiteHeader.astro';
 import PageFoot from '../blog/PageFoot.astro';
 import { getSite, getUI, getWork } from '../../lib/content';
 import { absolute } from '../../lib/seo';
+import { hasPhoto } from '../../lib/og';
 import { localizePath, otherLocale, type Locale } from '../../lib/i18n';
 import { textToHtml } from '../../lib/text';
 import type { WorkProject } from '../../data/work';
@@ -47,6 +48,8 @@ const sameKind = work.projects.filter((p) => p.category === project.category);
 const here = sameKind.findIndex((p) => p.slug === project.slug);
 const next = sameKind.length > 1 ? sameKind[(here + 1) % sameKind.length] : null;
 
+// Its own share picture when it has a photograph; the site's otherwise.
+const shareImage = hasPhoto(project.image) ? `/og/work/${locale}/${project.slug}.jpg` : undefined;
 const scope = project.scope?.filter(Boolean) ?? [];
 const gallery = project.gallery?.filter(Boolean) ?? [];
 ---
@@ -58,7 +61,8 @@ const gallery = project.gallery?.filter(Boolean) ?? [];
   translated={translated}
   ogType="article"
   trail={[home, { name: kindTitle, path: kindPath }]}
-  kind={{ type: 'project', year: project.year, image: project.image ? absolute(project.image) : undefined }}
+  kind={{ type: 'project', year: project.year, image: shareImage ? absolute(shareImage) : undefined }}
+  image={shareImage}
 >
   <SiteHeader slot="header" locale={locale} switchHref={switchHref} />
 

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import FieldEditor from '../content/FieldEditor';
 import type { Field } from '../../content/fields';
 import { LANG_NAMES, LANGS, type Lang } from '../../lib/posts';
-import { blankProject, getProjects, isSlug, nameOf, saveProjects, type Project } from '../../lib/projects';
+import { blankProject, getProjects, HOME_LIMIT, isSlug, nameOf, saveProjects, type Project } from '../../lib/projects';
 
 /*
   One project on a page of its own, in three parts: what's the same in
@@ -25,6 +25,12 @@ const DETAILS: Field[] = [
   },
   { kind: 'text', key: 'link', label: 'Live link', ltr: true, hint: 'The finished site, if it can be visited. Empty for none.' },
   { kind: 'text', key: 'year', label: 'Year' },
+  {
+    kind: 'switch',
+    key: 'featured',
+    label: 'Show on the home page',
+    hint: `The home page shows up to ${HOME_LIMIT} projects, in the list’s order.`,
+  },
   {
     kind: 'text',
     key: 'slug',
@@ -118,6 +124,12 @@ function ProjectEditor({ slug }: { slug: string }) {
     try {
       // Fresh from the database, so a change made elsewhere isn't undone.
       const { projects } = await getProjects();
+      const others = projects.filter((p) => p.slug !== slug && p.featured).length;
+      if (project.featured && others >= HOME_LIMIT) {
+        setError(`The home page already shows ${HOME_LIMIT} projects. Take one off in the list first.`);
+        setBusy(false);
+        return;
+      }
       const taken = projects.some((p) => p.slug === address && p.slug !== slug);
       if (taken) {
         setError(`Another project already uses /work/${address}.`);

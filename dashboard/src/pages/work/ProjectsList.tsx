@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { getProjects, nameOf, saveProjects, type Project } from '../../lib/projects';
+import { getProjects, HOME_LIMIT, nameOf, saveProjects, type Project } from '../../lib/projects';
 
 /*
   Every project, in the order the site shows it, numbered. Each opens on
@@ -35,21 +35,34 @@ export default function ProjectsList() {
     };
   }, []);
 
-  async function move(from: number, to: number) {
+  const onHome = projects?.filter((p) => p.featured).length ?? 0;
+
+  /** Saves a changed list at once, and puts the old one back if that fails. */
+  async function commit(next: Project[]) {
     if (!projects) return;
-    const next = [...projects];
-    const [item] = next.splice(from, 1);
-    next.splice(to, 0, item);
     setProjects(next);
     setMoving(true);
     setError('');
     try {
       await saveProjects(next);
     } catch {
-      setError('Couldn’t save the new order. Check the connection, and that this account is an admin.');
+      setError('Couldn’t save. Check the connection, and that this account is an admin.');
       setProjects(projects);
     }
     setMoving(false);
+  }
+
+  function move(from: number, to: number) {
+    if (!projects) return;
+    const next = [...projects];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    commit(next);
+  }
+
+  function toggleHome(i: number) {
+    if (!projects) return;
+    commit(projects.map((p, j) => (j === i ? { ...p, featured: !p.featured } : p)));
   }
 
   return (
@@ -63,6 +76,12 @@ export default function ProjectsList() {
             The work on the site, in the order it’s shown. Open one to edit it. The words around them are in{' '}
             <Link to="/content/work">Work page</Link>.
           </p>
+          {projects && (
+            <p className="screen__lead mono">
+              On the home page: {onHome} of {HOME_LIMIT}
+              {onHome === 0 && ' · none chosen, so the first four show'}
+            </p>
+          )}
         </div>
         <Link className="button" to="/projects/new">
           New project
@@ -81,6 +100,7 @@ export default function ProjectsList() {
               <th className="mono">Project</th>
               <th className="mono">Listed under</th>
               <th className="mono">Live</th>
+              <th className="mono">Home page</th>
               <th className="mono">Order</th>
             </tr>
           </thead>
@@ -105,6 +125,19 @@ export default function ProjectsList() {
                   ) : (
                     '—'
                   )}
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    className={`pick ${p.featured ? 'pick--on' : ''}`}
+                    aria-pressed={p.featured}
+                    disabled={moving || (!p.featured && onHome >= HOME_LIMIT)}
+                    title={!p.featured && onHome >= HOME_LIMIT ? `Four are chosen. Take one off first.` : undefined}
+                    onClick={() => toggleHome(i)}
+                  >
+                    <span className="pick__dot" aria-hidden="true" />
+                    {p.featured ? 'On home' : 'Add'}
+                  </button>
                 </td>
                 <td>
                   <span className="item__tools">

@@ -1606,3 +1606,59 @@ textarea:lang(ar) {
   margin-block-start: var(--space-sm);
   border-block-start: 1px solid var(--rule);
 }
+
+/* ---- Choosing the home page's projects ------------------------------ */
+
+.pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    color var(--dur) var(--ease),
+    background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.pick:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.pick:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Chosen: ink, with the dot lit. */
+.pick--on {
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.pick--on:hover:not(:disabled) {
+  color: var(--paper);
+}
+
+.pick__dot {
+  inline-size: 0.4rem;
+  block-size: 0.4rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+}
+
+.pick--on .pick__dot {
+  background: var(--accent);
+  opacity: 1;
+}

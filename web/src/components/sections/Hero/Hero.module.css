@@ -44,38 +44,53 @@
   }
 }
 
-/* Phones: the plan sits beside the sentence as a narrow, portrait block,
-   which reads as a phone layout rather than a squashed desktop one. */
+/* Phones: one column. The sentence gets the full width to be large in,
+   the two buttons share a row, and the plan comes last, filling what's
+   left of the screen instead of being squeezed beside the words. */
 @media (max-width: 48rem) {
   .hero {
-    /* Full screen, with the plan beside the sentence and everything
-       below it running the full width, so the type can grow without
-       shredding into a narrow column. */
-    --hero-size: clamp(1.9rem, 9.5vw, 2.8rem);
-    grid-template-columns: minmax(0, 1fr) minmax(4.5rem, 7rem);
+    --hero-size: clamp(2.2rem, 11vw, 3rem);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto 1fr;
     grid-template-areas:
-      'head motif'
-      'support support'
-      'actions actions';
-    /* Top-aligned with fixed gaps: the slack lands at the bottom, where
-       the section ends and it reads as breathing room rather than as a
-       hole under the header. */
-    align-content: start;
-    column-gap: var(--space-md);
-    row-gap: var(--space-xl);
-    padding-block: var(--space-lg) var(--space-xl);
+      'head'
+      'support'
+      'actions'
+      'motif';
+    align-content: stretch;
+    justify-items: stretch;
+    row-gap: var(--space-lg);
+    padding-block: var(--space-xl) var(--space-lg);
   }
 
+  /* Full width: centred, the wrapper would shrink to the drawing's least
+     width and the plan would collapse into a sliver. */
   .motif {
-    --motif-scale: 0.5;
+    --motif-scale: 0.78;
+    align-self: center;
+    justify-self: stretch;
   }
 
   .support {
     font-size: var(--step-1);
   }
 
+  .actions {
+    flex-wrap: nowrap;
+    gap: var(--space-sm);
+  }
+
+  /* Each button sits in its magnet's wrapper; the wrappers share the row,
+     and each button fills its wrapper. */
+  .actions > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
   .action {
-    padding: var(--space-sm) var(--space-lg);
+    width: 100%;
+    justify-content: center;
+    padding: var(--space-sm) var(--space-md);
   }
 }
 

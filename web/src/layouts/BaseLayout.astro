@@ -5,6 +5,7 @@ import Cursor from '../components/layout/Cursor/Cursor';
 import ScrollBar from '../components/layout/ScrollBar/ScrollBar';
 import { getLocale, dirFor, locales, type Locale } from '../lib/i18n';
 import Maintenance from '../components/layout/Maintenance.astro';
+import Intro from '../components/layout/Intro.astro';
 import { getMaintenance, getSite } from '../lib/content';
 import { absolute, graph, jsonLd, pageUrl, type Crumb, type PageKind } from '../lib/seo';
 import '../styles/global.css';
@@ -25,6 +26,8 @@ interface Props {
   trail?: Crumb[];
   /** What this page is, for structured data: an article, a project, or a plain page. */
   kind?: PageKind;
+  /** The page's own share picture, 1200 × 630, by its path; the site's when left out. */
+  image?: string;
   /**
    * False for a page search engines should leave out (the 404): it gets
    * noindex, and no canonical or language links, which belong to real pages.
@@ -47,12 +50,13 @@ const {
   trail,
   kind,
   indexed = true,
+  image = '/og-default.png',
 } = Astro.props;
 const alternates = translated ? locales : [locale];
 
 const pageTitle = title ? `${title} — ${content.name}` : `${content.name} — ${content.tagline}`;
 const canonical = pageUrl(path, locale);
-const ogImage = absolute('/og-default.png');
+const ogImage = absolute(image);
 const structured = graph({ locale, path, title: title ?? pageTitle, description, trail, kind });
 ---
 
@@ -101,7 +105,7 @@ const structured = graph({ locale, path, title: title ?? pageTitle, description,
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={`${content.name} — ${content.tagline}`} />
+    <meta property="og:image:alt" content={image === '/og-default.png' ? `${content.name} — ${content.tagline}` : (title ?? pageTitle)} />
     {kind?.type === 'article' && <meta property="article:published_time" content={kind.published.toISOString()} />}
     <meta name="twitter:card" content="summary_large_image" />
 
@@ -119,6 +123,8 @@ const structured = graph({ locale, path, title: title ?? pageTitle, description,
   </head>
 
   <body>
+    {/* The logo film, on a visit's first page; maintenance has an entrance of its own. */}
+    {!paused && <Intro locale={locale} />}
     <a class="u-skip" href="#main">
       {locale === 'ar' ? 'تخطَّ إلى المحتوى' : 'Skip to content'}
     </a>

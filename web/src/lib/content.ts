@@ -134,8 +134,21 @@ function savedProjects(locale: Locale): WorkProject[] | null {
         summary: String(own.summary ?? ''),
         body: String(own.body ?? ''),
         scope: Array.isArray(own.scope) ? own.scope.map(String) : [],
+        featured: item.featured === true,
       };
     });
+}
+
+/** How many projects the home page shows. */
+export const HOME_PROJECTS = 4;
+
+/**
+ * The home page's projects: the ones chosen in the dashboard, in the
+ * list's order, at most four. Until any are chosen, the first four.
+ */
+export function homeProjects(projects: WorkProject[]): WorkProject[] {
+  const chosen = projects.filter((project) => project.featured);
+  return (chosen.length ? chosen : projects).slice(0, HOME_PROJECTS);
 }
 
 export function getWork(locale: Locale) {
