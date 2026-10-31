@@ -8,6 +8,7 @@ import Maintenance from '../components/layout/Maintenance.astro';
 import Loader from '../components/layout/Loader.astro';
 import { getMaintenance, getSite } from '../lib/content';
 import { absolute, graph, jsonLd, pageUrl, type Crumb, type PageKind } from '../lib/seo';
+import { feedPath } from '../lib/feed';
 import '../styles/fonts.css';
 import '../styles/global.css';
 
@@ -107,9 +108,17 @@ const structured = graph({ locale, path, title: title ?? pageTitle, description,
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={image === '/og-default.png' ? `${content.name} — ${content.tagline}` : (title ?? pageTitle)} />
-    {kind?.type === 'article' && <meta property="article:published_time" content={kind.published.toISOString()} />}
+    {
+      kind?.type === 'article' && (
+        <>
+          <meta property="article:published_time" content={kind.published.toISOString()} />
+          <meta property="article:modified_time" content={(kind.modified ?? kind.published).toISOString()} />
+        </>
+      )
+    }
     <meta name="twitter:card" content="summary_large_image" />
 
+    <link rel="alternate" type="application/rss+xml" title={`${content.name} — RSS`} href={feedPath(locale)} />
     <script type="application/ld+json" set:html={jsonLd(structured)} />
 
     {/* The fonts the first screen is set in, fetched alongside the page (styles/fonts.css). */}

@@ -14,7 +14,17 @@ import SiteHeader from '../layout/Header/SiteHeader.astro';
 import PageFoot from './PageFoot.astro';
 import { getSite, getUI } from '../../lib/content';
 import { absolute } from '../../lib/seo';
-import { getBlog, postPath, slugOf, readingMinutes, formatDate, type Post } from '../../lib/blog';
+import {
+  getBlog,
+  postPath,
+  postHref,
+  slugOf,
+  readingMinutes,
+  formatDate,
+  modifiedOf,
+  relatedPosts,
+  type Post,
+} from '../../lib/blog';
 import { localizePath, otherLocale, type Locale } from '../../lib/i18n';
 
 interface Props {
@@ -34,6 +44,7 @@ const other = otherLocale(locale);
 const switchHref = localizePath(translated ? path : '/blog', other);
 const shareImage = `/og/blog/${locale}/${slugOf(post)}.png`;
 const minutes = readingMinutes(post).toLocaleString(locale === 'ar' ? 'ar-EG' : 'en');
+const related = await relatedPosts(post);
 ---
 
 <BaseLayout
@@ -43,7 +54,7 @@ const minutes = readingMinutes(post).toLocaleString(locale === 'ar' ? 'ar-EG' : 
   translated={translated}
   ogType="article"
   trail={[home, { name: getUI(locale).nav.blog, path: '/blog' }]}
-  kind={{ type: 'article', published: post.data.date, image: absolute(shareImage) }}
+  kind={{ type: 'article', published: post.data.date, modified: modifiedOf(post), image: absolute(shareImage) }}
   image={shareImage}
 >
   <SiteHeader slot="header" locale={locale} switchHref={switchHref} />
@@ -69,6 +80,26 @@ const minutes = readingMinutes(post).toLocaleString(locale === 'ar' ? 'ar-EG' : 
     <div class="prose">
       <Content />
     </div>
+
+    {
+      related.length > 0 && (
+        <nav class="related" aria-labelledby="related-title">
+          <h2 id="related-title" class="related__title u-mono">
+            {copy.related}
+          </h2>
+          <ul class="related__list">
+            {related.map((other) => (
+              <li>
+                <a class="related__link" href={postHref(other)}>
+                  <span class="related__name">{other.data.title}</span>
+                  <span class="related__desc">{other.data.description}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )
+    }
 
     <aside class="article__next">
       <p class="u-mono">{copy.next.label}</p>
@@ -258,6 +289,55 @@ const minutes = readingMinutes(post).toLocaleString(locale === 'ar' ? 'ar-EG' : 
   }
 
   /* ---- The way on ----------------------------------------------------- */
+
+  /* ---- Closest posts ---------------------------------------------------- */
+
+  .related {
+    max-inline-size: var(--measure);
+    margin-block-start: var(--space-2xl);
+    padding-block-start: var(--space-md);
+    border-block-start: 1px solid var(--ink);
+  }
+
+  .related__title {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+
+  .related__list {
+    margin-block-start: var(--space-sm);
+  }
+
+  .related__list li + li {
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .related__link {
+    display: grid;
+    gap: var(--space-2xs);
+    padding-block: var(--space-md);
+    color: var(--ink);
+  }
+
+  .related__name {
+    font-size: var(--step-1);
+    line-height: 1.2;
+    transition: color var(--dur-base) var(--ease-out-power3);
+  }
+
+  :global([dir='rtl']) .related__name {
+    font-size: calc(var(--step-1) * var(--ar-scale));
+    line-height: calc(1.2 * var(--ar-leading));
+  }
+
+  .related__desc {
+    color: var(--ink-muted);
+  }
+
+  .related__link:hover .related__name,
+  .related__link:focus-visible .related__name {
+    color: var(--accent);
+  }
 
   .article__next {
     display: grid;

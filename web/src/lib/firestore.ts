@@ -77,6 +77,8 @@ export interface RemotePostVersion {
 export interface RemotePost {
   slug: string;
   date: Date;
+  /** When it was last saved in the dashboard. */
+  updated: Date | null;
   ar: RemotePostVersion | null;
   en: RemotePostVersion | null;
 }
@@ -105,6 +107,7 @@ export async function loadPosts(): Promise<RemotePost[] | null> {
         return {
           slug: idOf(row.document!),
           date: data.date instanceof Date ? data.date : new Date(),
+          updated: data.updatedAt instanceof Date ? data.updatedAt : null,
           ar: (data.ar as RemotePostVersion | null) ?? null,
           en: (data.en as RemotePostVersion | null) ?? null,
         };

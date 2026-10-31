@@ -32,11 +32,14 @@ export function stripLocale(pathname: string): string {
   return '/' + segments.join('/');
 }
 
-/** Build the URL for `path` in `locale`. Pass locale-independent paths. */
+/**
+ * Build the URL for `path` in `locale`. Pass locale-independent paths.
+ * Pages are folders, so it ends in a slash: without one the host answers
+ * every click with a redirect.
+ */
 export function localizePath(path: string, locale: Locale): string {
   const clean = stripLocale(path).replace(/\/+$/, '');
-  if (locale === defaultLocale) return clean === '' ? '/' : clean;
-  return clean === '' ? `/${locale}/` : `/${locale}${clean}`;
+  return locale === defaultLocale ? `${clean}/` : `/${locale}${clean}/`;
 }
 
 /** The current page's address in the other language. */

@@ -52,14 +52,24 @@ const blog = defineCollection({
           const id = `${lang}/${post.slug}`;
           const data = await context.parseData({
             id,
-            data: { title: version.title, description: version.description, date: post.date, draft: false },
+            data: {
+              title: version.title,
+              description: version.description,
+              date: post.date,
+              updated: post.updated ?? undefined,
+              draft: false,
+            },
           });
           context.store.set({
             id,
             data,
             body: version.body,
             rendered: await context.renderMarkdown(version.body),
-            digest: context.generateDigest({ ...version, date: post.date.toISOString() }),
+            digest: context.generateDigest({
+              ...version,
+              date: post.date.toISOString(),
+              updated: post.updated?.toISOString(),
+            }),
           });
         }
       }
@@ -70,6 +80,11 @@ const blog = defineCollection({
     /** One or two lines: the list shows it, and so do search results. */
     description: z.string(),
     date: z.coerce.date(),
+    /**
+     * When it last changed, for search engines. The dashboard records it on
+     * every save; a file may set it by hand.
+     */
+    updated: z.coerce.date().optional(),
     /** Drafts build in `astro dev` only, never on the live site. */
     draft: z.boolean().default(false),
   }),

@@ -57,6 +57,84 @@ export function readingMinutes(post: Post): number {
   return Math.max(1, Math.round(words / 200));
 }
 
+/** When a post last changed: its edit, if that came after it was published. */
+export const modifiedOf = (post: Post): Date =>
+  post.data.updated && post.data.updated > post.data.date ? post.data.updated : post.data.date;
+
+/*
+  Related posts, for the links under each one. Posts carry no tags, so
+  they're matched on their words: each post is weighed as a bag of words
+  (the title counting most, then the description, then the body), words
+  that every post uses count for little (tf-idf), and the closest by
+  cosine come first.
+*/
+
+/** One spelling for an Arabic word, with the common prefixes off, so "والتصميم" meets "تصميم". */
+function stem(word: string): string {
+  const plain = word
+    .replace(/[ً-ٰٟـ]/g, '')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي');
+  const bare = plain.replace(/^(وال|بال|كال|فال|لل|ال)/, '');
+  return bare.length >= 3 ? bare : plain;
+}
+
+function terms(text: string): string[] {
+  return (text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []).map(stem).filter((word) => word.length >= 3);
+}
+
+function weigh(post: Post): Map<string, number> {
+  const counts = new Map<string, number>();
+  const add = (text: string, weight: number) =>
+    terms(text).forEach((term) => counts.set(term, (counts.get(term) ?? 0) + weight));
+  add(post.data.title, 4);
+  add(post.data.description, 2);
+  add(post.body ?? '', 1);
+  return counts;
+}
+
+const neighbours = new Map<Locale, Promise<Map<string, Post[]>>>();
+
+async function rank(locale: Locale): Promise<Map<string, Post[]>> {
+  const posts = await getPosts(locale);
+  const bags = posts.map(weigh);
+  const spread = new Map<string, number>();
+  bags.forEach((bag) => bag.forEach((_, term) => spread.set(term, (spread.get(term) ?? 0) + 1)));
+
+  const vectors = bags.map((bag) => {
+    const vector = new Map<string, number>();
+    bag.forEach((count, term) => vector.set(term, (1 + Math.log(count)) * Math.log(posts.length / spread.get(term)!)));
+    const length = Math.hypot(...vector.values()) || 1;
+    vector.forEach((value, term) => vector.set(term, value / length));
+    return vector;
+  });
+
+  const cosine = (a: Map<string, number>, b: Map<string, number>) => {
+    let sum = 0;
+    a.forEach((value, term) => (sum += value * (b.get(term) ?? 0)));
+    return sum;
+  };
+
+  return new Map(
+    posts.map((post, i) => [
+      post.id,
+      posts
+        .map((other, j) => ({ other, score: i === j ? -1 : cosine(vectors[i], vectors[j]) }))
+        .filter(({ score }) => score >= 0)
+        .sort((a, b) => b.score - a.score)
+        .map(({ other }) => other),
+    ]),
+  );
+}
+
+/** The posts closest to this one in its language, closest first. */
+export async function relatedPosts(post: Post, count = 3): Promise<Post[]> {
+  const locale = localeOf(post);
+  if (!neighbours.has(locale)) neighbours.set(locale, rank(locale));
+  return ((await neighbours.get(locale)!).get(post.id) ?? []).slice(0, count);
+}
+
 export function formatDate(date: Date, locale: Locale): string {
   return date.toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-GB', {
     day: 'numeric',

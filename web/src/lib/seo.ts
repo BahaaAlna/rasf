@@ -78,7 +78,7 @@ export interface Crumb {
 /** What a page adds about itself. */
 export type PageKind =
   | { type: 'page' }
-  | { type: 'article'; published: Date; image?: string }
+  | { type: 'article'; published: Date; modified?: Date; image?: string }
   | { type: 'project'; year?: string; image?: string };
 
 export interface PageFacts {
@@ -130,6 +130,7 @@ export function graph({ locale, path, title, description, trail, kind = { type: 
       headline: title,
       description,
       datePublished: kind.published.toISOString(),
+      dateModified: (kind.modified ?? kind.published).toISOString(),
       inLanguage: locale,
       url,
       image: kind.image ?? absolute('/og-default.png'),

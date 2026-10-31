@@ -273,6 +273,7 @@ export const SECTIONS: Section[] = [
       text('empty', 'When there are no posts'),
       text('readingTime', 'Reading time', { hint: '{n} becomes the minutes.' }),
       text('back', 'Link back to the list'),
+      text('related', 'Heading over related posts'),
       {
         kind: 'group',
         key: 'next',

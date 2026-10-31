@@ -17,6 +17,8 @@ export interface BlogContent {
   readingTime: string;
   /** On a post, the way back to the list. */
   back: string;
+  /** Under a post: the heading over the posts closest to it. */
+  related: string;
   /** Under a post: the way to the contact form. */
   next: { label: string; cta: string };
   /**
@@ -34,6 +36,7 @@ export const blog: Record<Locale, BlogContent> = {
     empty: 'لا مقالات بعد. قريباً.',
     readingTime: '{n} دقائق قراءة',
     back: 'كل المقالات',
+    related: 'اقرأ أيضاً',
     next: { label: 'عندك فكرة؟', cta: 'ابدأ مشروعك' },
     pages: { label: 'صفحات المقالات', page: 'صفحة {n}', previous: 'السابق', next: 'التالي' },
   },
@@ -43,6 +46,7 @@ export const blog: Record<Locale, BlogContent> = {
     empty: 'No posts yet. Soon.',
     readingTime: '{n} min read',
     back: 'All posts',
+    related: 'Keep reading',
     next: { label: 'Have an idea?', cta: 'Start a project' },
     pages: { label: 'Pages of posts', page: 'Page {n}', previous: 'Previous', next: 'Next' },
   },
