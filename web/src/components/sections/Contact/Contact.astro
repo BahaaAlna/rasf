@@ -2,8 +2,8 @@
 /*
   Contact: the last section, and where every "Start a project" button on
   the page lands. A big invitation, the direct way in — the email, with a
-  button to copy it — and a short project form beside it. A slim strip
-  closes the page.
+  button to copy it, and the studio's social links under it — and a short
+  project form beside it. A slim strip closes the page.
 
   The form sends straight to the dashboard's Messages (`contact.ts` saves
   it in Firestore), and says under the button whether it went. A field
@@ -27,7 +27,8 @@ interface Props {
   /** The section's heading — the nav's own word for it. */
   title: string;
   copy: ContactSection;
-  site: { name: string; email: string; location: string };
+  /** Socials arrive with the empty ones already left out. */
+  site: { name: string; email: string; location: string; socials: { label: string; href: string }[] };
   /** The logotype for the wheel. */
   logo: { src: string; width: number | string; height: number | string };
   /** What can be asked for: the Services titles, in their order. */
@@ -92,6 +93,22 @@ const { form } = copy;
             {copy.direct.copy}
           </button>
         </div>
+        {
+          site.socials.length > 0 && (
+            <ul class="direct__socials" dir="ltr">
+              {site.socials.map((social) => (
+                <li>
+                  <a class="u-mono" href={social.href} target="_blank" rel="noopener noreferrer">
+                    {social.label}
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 17 17 7M9 7h8v8"></path>
+                    </svg>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
         <p class="direct__based" data-wheel-start>{site.location}<span class="contact__dot">.</span></p>
       </div>
 
@@ -307,6 +324,40 @@ const { form } = copy;
     color: var(--paper);
     background: var(--accent);
     border-color: var(--accent);
+  }
+
+  /* Brand names, so the same in both languages and always left to right. */
+  .direct__socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs) var(--space-md);
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  :global([dir='rtl']) .direct__socials {
+    justify-content: flex-end;
+  }
+
+  .direct__socials a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    color: var(--ink);
+    transition: color var(--dur-base) var(--ease-out-power3);
+  }
+
+  .direct__socials a:hover,
+  .direct__socials a:focus-visible {
+    color: var(--accent);
+  }
+
+  .direct__socials svg {
+    inline-size: 0.9em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
   }
 
   .direct__based {
