@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { blank, type Field, type Values } from '../../content/fields';
 import { makeIcon, type SiteIcon } from '../../content/icon';
 import defaultIcon from '../../../../web/public/apple-touch-icon.png';
+import ChoiceField from '../../components/ChoiceField';
 
 /*
   One field of a section, drawn from its description: a line, a box, a
@@ -58,17 +59,13 @@ export default function FieldEditor({ field, value, onChange, lang }: Props) {
 
     case 'choice':
       return (
-        <label className="field field--short">
-          <span className="mono">{field.label}</span>
-          <select value={typeof value === 'string' ? value : field.options[0]?.value} onChange={(e) => onChange(e.target.value)}>
-            {field.options.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          {hint}
-        </label>
+        <ChoiceField
+          label={field.label}
+          value={typeof value === 'string' ? value : (field.options[0]?.value ?? '')}
+          options={field.options}
+          onChange={onChange}
+          hint={hint}
+        />
       );
 
     case 'number':
