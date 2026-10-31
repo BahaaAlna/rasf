@@ -1,0 +1,49 @@
+{
+  "fps": 60,
+  "frames": 678,
+  "width": 1512,
+  "height": 930,
+  "stops": [
+    {
+      "id": "hero",
+      "frame": 0
+    },
+    {
+      "id": "work",
+      "frame": 144
+    },
+    {
+      "id": "services",
+      "frame": 282
+    },
+    {
+      "id": "about",
+      "frame": 420
+    },
+    {
+      "id": "contact",
+      "frame": 558
+    }
+  ],
+  "swipes": [
+    {
+      "start": 78,
+      "end": 144
+    },
+    {
+      "start": 216,
+      "end": 282
+    },
+    {
+      "start": 354,
+      "end": 420
+    },
+    {
+      "start": 486,
+      "end": 558
+    }
+  ],
+  "clicks": [
+    642
+  ]
+}

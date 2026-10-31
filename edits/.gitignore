@@ -1,0 +1,7 @@
+node_modules/
+# Rendered videos (npm run render)
+out/
+# Generated media: the site recordings (npm run record) and the sounds
+# (npm run sounds). The recordings' .json files stay: the code reads them.
+public/rec/*.mp4
+public/sfx/

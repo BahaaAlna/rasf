@@ -3,6 +3,7 @@
 - `web/`: the public website (Astro). Everything below applies to it, and its commands run from inside `web/`.
 - `dashboard/`: the admin dashboard for the site's content (React + Vite + Firebase). Its commands run from inside `dashboard/`; setup is in its README.
 - `brand/`: source logo artwork, shared by both.
+- `edits/`: promo videos made in code (Remotion). Its commands run from inside `edits/`; see its README.
 
 ## Development (web)
 
