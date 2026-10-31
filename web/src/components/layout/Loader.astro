@@ -7,9 +7,17 @@
   parts awake. Pictures further down are lazy, so they don't hold it up;
   they arrive as the reader scrolls to them.
 
-  A page that's ready within half a second (a return visit, a fast
-  connection) never shows it at all, and it only ever runs on the first
-  page of a visit: moving between pages afterwards is a swap, not a load.
+  On the first page of a visit, one that's ready within half a second (a
+  return visit, a fast connection) never shows it at all.
+
+  Every move to another page afterwards shows it too, at once, the moment
+  the link is followed: the ClientRouter fetches the next page and swaps
+  it in, and without this the old page would just sit there, as if
+  frozen, until the new one appeared. It covers the fetch and the swap,
+  and lifts only when the new page's first screen is ready, by the same
+  measure as the first load. A jump within the same page (#contact) isn't
+  a move and doesn't show it.
+
   It never stays longer than 30 seconds whatever happens, and without
   JavaScript it never appears, so nothing is stuck behind it.
 
@@ -45,53 +53,40 @@ const { locale } = Astro.props;
 </div>
 
 <script is:inline>
+  // The ClientRouter runs an inline script once per visit (the same text
+  // on the next page is skipped), so this sets everything up once and
+  // looks the screen up afresh each time: every page brings its own.
   (() => {
     const root = document.documentElement;
-    const screen = document.getElementById('loader');
-    const fill = document.getElementById('loader-fill');
-    if (!screen || !fill) return;
+    const screen = () => document.getElementById('loader');
+    const fill = () => document.getElementById('loader-fill');
 
-    // A later page of the same visit: it's already all here.
-    if (window.__rasfLoaded) {
-      screen.remove();
-      return;
-    }
-
-    let done = false;
+    /** Which wait is current: a newer move to another page outdates the one before. */
+    let run = 0;
+    /** Between following a link and the new page being in place. */
+    let moving = false;
     let shown = 0;
-    // Only ever moves forward.
+
+    // Only ever moves forward, until the next page starts it again.
     const show = (part) => {
       shown = Math.max(shown, Math.min(part, 1));
-      fill.style.transform = `scaleX(${shown})`;
+      const bar = fill();
+      if (bar) bar.style.transform = `scaleX(${shown})`;
     };
-    show(0.05);
 
-    const start = performance.now();
-    const finish = () => {
-      if (done) return;
-      done = true;
-      window.__rasfLoaded = true;
-      // The page's own entrance plays as the screen lifts, not behind it.
-      root.classList.add('is-ready');
-      // Ready before it was ever shown: gone at once, with no fade to glimpse.
-      if (performance.now() - start < 450) {
-        root.classList.remove('is-loading', 'is-ready');
-        screen.remove();
-        return;
-      }
-      show(1);
-      screen.classList.add('loader--out');
-      setTimeout(() => {
-        root.classList.remove('is-loading', 'is-ready');
-        screen.remove();
-      }, 520);
+    /** Back to empty at once, not drawn back across. */
+    const empty = () => {
+      shown = 0;
+      const bar = fill();
+      if (!bar) return;
+      bar.style.transition = 'none';
+      bar.style.transform = 'scaleX(0)';
+      void bar.offsetWidth;
+      bar.style.removeProperty('transition');
     };
 
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-    const parsed = new Promise((r) =>
-      document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', r, { once: true }) : r(),
-    );
-    const loaded = new Promise((r) => (document.readyState === 'complete' ? r() : addEventListener('load', r, { once: true })));
+    const frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
     // On screen: laid out, and inside the first screenful. A lazy picture
     // further down waits for the reader; one that's hidden never loads.
@@ -102,12 +97,12 @@ const { locale } = Astro.props;
     };
 
     // Each picture that counts: downloaded, then decoded, so it paints whole.
-    const pictures = parsed.then(() => {
+    const pictures = (from, to) => {
       const images = [...document.images].filter(
         (img) => !img.closest('#loader') && (img.loading !== 'lazy' || onScreen(img)),
       );
       let landed = 0;
-      const one = () => show(0.1 + (0.6 * ++landed) / Math.max(images.length, 1));
+      const one = () => show(from + ((to - from) * ++landed) / Math.max(images.length, 1));
       return Promise.all(
         images.map((img) =>
           (img.complete
@@ -122,7 +117,7 @@ const { locale } = Astro.props;
             .then(one),
         ),
       );
-    });
+    };
 
     // Every font the page has started on, then whatever its text still needs.
     const fonts = () =>
@@ -143,14 +138,79 @@ const { locale } = Astro.props;
       for (let i = 0; i < 100 && asleep(); i++) await wait(100);
     };
 
-    Promise.all([pictures, loaded.then(() => show(0.8))])
-      .then(fonts)
-      .then(() => show(0.9))
-      .then(awake)
-      // One frame for everything to paint before it's revealed.
-      .then(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
-      .then(finish, finish);
-    setTimeout(finish, 30000);
+    /** The screen lifts, unless a newer move has started since. */
+    const lift = (id, quick) => {
+      if (id !== run) return;
+      window.__rasfLoaded = true;
+      // The page's own entrance plays as the screen lifts, not behind it.
+      root.classList.add('is-ready');
+      const done = () => {
+        if (id === run) root.classList.remove('is-loading', 'is-moving', 'is-ready');
+      };
+      // Ready before it was ever shown: gone at once, with no fade to glimpse.
+      if (quick) return done();
+      show(1);
+      screen()?.classList.add('loader--out');
+      setTimeout(done, 520);
+    };
+
+    /** Until this page's first screen is ready, then lift. */
+    const settle = (id, first) => {
+      const start = performance.now();
+      const loaded = first
+        ? new Promise((r) => (document.readyState === 'complete' ? r() : addEventListener('load', r, { once: true })))
+        : null;
+      const parsed = new Promise((r) =>
+        document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', r, { once: true }) : r(),
+      );
+      const ready = () => lift(id, first && performance.now() - start < 450);
+
+      Promise.all([parsed.then(() => pictures(first ? 0.1 : 0.5, 0.7)), loaded?.then(() => show(0.8))])
+        .then(fonts)
+        .then(() => show(0.9))
+        .then(awake)
+        // One frame for everything to paint before it's revealed.
+        .then(frames)
+        .then(ready, ready);
+      setTimeout(ready, 30000);
+    };
+
+    // The first page of the visit.
+    show(0.05);
+    settle(run, true);
+
+    // A link followed: cover the page now, before the next one is fetched.
+    document.addEventListener('astro:before-preparation', () => {
+      run++;
+      moving = true;
+      root.classList.remove('is-ready');
+      root.classList.add('is-loading', 'is-moving');
+      screen()?.classList.remove('loader--out', 'loader--held');
+      empty();
+      show(0.1);
+    });
+
+    // Fetched, with its stylesheets.
+    document.addEventListener('astro:after-preparation', () => show(0.4));
+
+    // The new page replaces the root's classes and the screen itself, so
+    // it arrives already covered, the hairline where this one had it.
+    document.addEventListener('astro:before-swap', (event) => {
+      event.newDocument.documentElement.classList.add('is-loading', 'is-moving');
+      // Already covering: no fade in, which would show the new page through it.
+      event.newDocument.getElementById('loader')?.classList.add('loader--held');
+      const bar = event.newDocument.getElementById('loader-fill');
+      if (bar) bar.setAttribute('style', `transition: none; transform: scaleX(${shown})`);
+    });
+
+    // In place, with its scripts run: now wait for it the way the first page was waited for.
+    document.addEventListener('astro:page-load', () => {
+      if (!moving) return;
+      moving = false;
+      const bar = fill();
+      if (bar) requestAnimationFrame(() => bar.style.removeProperty('transition'));
+      settle(run, false);
+    });
   })();
 </script>
 
@@ -195,6 +255,16 @@ const { locale } = Astro.props;
     animation: loader-in 0.6s var(--ease-out-expo) 0.45s forwards;
   }
 
+  /* Moving to another page: it covers the old one at once, and the name shows straight away. */
+  :global(html.is-moving) .loader:not(.loader--out, .loader--held) {
+    animation: loader-cover 0.2s var(--ease-out-power3);
+  }
+
+  :global(html.is-moving) .loader__inner {
+    opacity: 1;
+    animation: none;
+  }
+
   .loader__mark {
     display: block;
     inline-size: min(320px, 72vw);
@@ -235,9 +305,19 @@ const { locale } = Astro.props;
     }
   }
 
+  @keyframes loader-cover {
+    from {
+      opacity: 0;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .loader__inner {
       animation-duration: 0.01ms;
+    }
+
+    :global(html.is-moving) .loader {
+      animation: none;
     }
 
     .loader__fill {
