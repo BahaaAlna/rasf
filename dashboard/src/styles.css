@@ -787,6 +787,227 @@ textarea:lang(ar) {
   justify-items: start;
 }
 
+/* ---- A project's link, as it shows when shared ---------------------- */
+
+.share {
+  display: grid;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+@media (min-width: 60rem) {
+  .share {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.share__app {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.share__label {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
+.share__default {
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 1200 / 630;
+  object-fit: cover;
+}
+
+/* WhatsApp: an outgoing message on the chat's paper, the preview inside it. */
+.wa {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--space-md);
+  background: #efeae2;
+  border-radius: 0.75rem;
+}
+
+.wa__bubble {
+  display: grid;
+  gap: 0.3rem;
+  inline-size: min(100%, 22rem);
+  padding: 0.25rem 0.25rem 0.35rem;
+  font-family: system-ui, sans-serif;
+  background: #d9fdd3;
+  border-radius: 0.6rem 0 0.6rem 0.6rem;
+  box-shadow: 0 1px 0.5px #0b141a21;
+}
+
+.wa__preview {
+  overflow: hidden;
+  background: #d1f4cc;
+  border-radius: 0.4rem;
+}
+
+.wa__picture,
+.x__card {
+  container-type: inline-size;
+}
+
+.wa__text {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.45rem 0.6rem 0.55rem;
+}
+
+.wa__title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #111b21;
+}
+
+.wa__desc {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #3b4a54;
+}
+
+.wa__domain {
+  font-size: 0.72rem;
+  color: #667781;
+}
+
+.wa__link {
+  padding-inline: 0.4rem;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+  color: #027eb5;
+  direction: ltr;
+}
+
+.wa__time {
+  justify-self: end;
+  padding-inline: 0.4rem;
+  font-size: 0.68rem;
+  color: #667781;
+}
+
+/* X: the large card, its title over the picture, the address under it. */
+.x {
+  display: grid;
+  gap: 0.35rem;
+  padding: var(--space-md);
+  font-family: system-ui, sans-serif;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 0.75rem;
+}
+
+.x__card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #cfd9de;
+  border-radius: 1rem;
+}
+
+.x__title {
+  position: absolute;
+  inset-block-end: 0.6rem;
+  inset-inline-start: 0.6rem;
+  max-inline-size: calc(100% - 1.2rem);
+  overflow: hidden;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.8rem;
+  color: #fff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #000000b3;
+  border-radius: 0.25rem;
+}
+
+.x__from {
+  font-size: 0.8rem;
+  color: #536471;
+}
+
+/*
+  The site's share card (web/src/lib/og.ts, projectCard), at its own
+  1200 × 630 layout: --px is one of its pixels at the width it's shown.
+*/
+.card {
+  --px: calc(100cqi / 1200);
+  --scale: 1;
+  position: relative;
+  aspect-ratio: 1200 / 630;
+  overflow: hidden;
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  font-weight: 500;
+  background: var(--paper);
+}
+
+.card--rtl {
+  --scale: 1.25;
+  font-family: 'Lateef', serif;
+  font-weight: 600;
+}
+
+.card__logo {
+  position: absolute;
+  inset-block-start: calc(90 * var(--px));
+  inset-inline-start: calc(96 * var(--px));
+  block-size: calc(46 * var(--px));
+}
+
+.card__words {
+  position: absolute;
+  inset-block-start: calc(230 * var(--px));
+  inset-inline-start: calc(96 * var(--px));
+  display: grid;
+  gap: calc(10 * var(--px));
+  inline-size: calc(352 * var(--px));
+}
+
+/* Set as tight as the site's text blocks are, so the kind sits where it does there. */
+.card__name {
+  font-size: calc(var(--size) * var(--scale) * var(--px));
+  line-height: 1.05;
+  color: var(--ink);
+  overflow-wrap: break-word;
+}
+
+.card__kind {
+  font-size: calc(26 * var(--scale) * var(--px));
+  line-height: 1.25;
+  color: var(--ink-muted);
+}
+
+.card__dot {
+  position: absolute;
+  inset-block-start: calc(520 * var(--px));
+  inset-inline-start: calc(96 * var(--px));
+  inline-size: calc(20 * var(--px));
+  block-size: calc(20 * var(--px));
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.card__shot {
+  position: absolute;
+  inset-block-start: calc(90 * var(--px));
+  inset-inline-end: calc(96 * var(--px));
+  inline-size: calc(600 * var(--px));
+  block-size: calc(450 * var(--px));
+  object-fit: cover;
+  object-position: top;
+  border-radius: calc(14 * var(--px));
+  outline: 1px solid #18181c29;
+  outline-offset: -1px;
+}
+
 .tabs__empty {
   font-size: 0.68rem;
   text-transform: none;

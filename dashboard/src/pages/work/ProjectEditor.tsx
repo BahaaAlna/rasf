@@ -1,14 +1,15 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import FieldEditor from '../content/FieldEditor';
+import SharePreview from '../../components/SharePreview';
 import type { Field } from '../../content/fields';
 import { LANG_NAMES, LANGS, type Lang } from '../../lib/posts';
 import { blankProject, getProjects, HOME_LIMIT, isSlug, nameOf, saveProjects, type Project } from '../../lib/projects';
 
 /*
-  One project on a page of its own, in three parts: what's the same in
-  both languages, its pictures, then its words in Arabic and English, one
-  tab each. Saving reads the list fresh and puts this project back in its
+  One project on a page of its own, in four parts: what's the same in
+  both languages, its pictures, its words in Arabic and English, one tab
+  each, and how its link will look when shared, in the tab's language. Saving reads the list fresh and puts this project back in its
   place, so two screens never undo each other's work.
 */
 
@@ -43,6 +44,16 @@ const DETAILS: Field[] = [
 const PICTURES: Field[] = [
   { kind: 'text', key: 'image', label: 'Picture', ltr: true, hint: 'Beside it in lists and at the top of its page. A path like /work/name.jpg, about 4:3.' },
   { kind: 'lines', key: 'gallery', label: 'More pictures', ltr: true, hint: 'One path per line, shown after the text on its page.' },
+  {
+    kind: 'choice',
+    key: 'galleryView',
+    label: 'How they’re shown',
+    hint: 'A MacBook shows them on its screen one at a time, with arrows, like a deck: best for slides at 16:9.',
+    options: [
+      { value: 'grid', label: 'Two columns' },
+      { value: 'laptop', label: 'MacBook' },
+    ],
+  },
 ];
 
 const WORDS: Field[] = [
@@ -265,6 +276,17 @@ function ProjectEditor({ slug }: { slug: string }) {
                 />
               ))}
             </div>
+          </section>
+
+          <section className="part">
+            <h2 className="part__title mono">
+              <span>04</span> When it’s shared
+            </h2>
+            <p className="part__lead">
+              Its link in {LANG_NAMES[tab]}, as WhatsApp and X will show it, from what’s typed now. The site draws the real
+              picture when it’s published.
+            </p>
+            <SharePreview project={project} lang={tab} />
           </section>
 
           {!isNew && (

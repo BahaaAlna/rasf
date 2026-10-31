@@ -12,7 +12,8 @@ export default defineConfig({
     fs: {
       // The section editors start from the website's own data files
       // (../web/src/data), so the dev server may read the website too.
-      allow: ['.', '../web/src/data', '../web/src/lib', '../web/src/content', '../web/public'],
+      // The share preview draws with the site's logos (../web/src/assets).
+      allow: ['.', '../web/src/data', '../web/src/lib', '../web/src/content', '../web/src/assets', '../web/public'],
     },
   },
 })
