@@ -8,7 +8,8 @@
   dot, the same line that joins picture and words on the Software and
   Designs pages. Beside the explanation, a column of facts: kind, year,
   what we did, and a way to the live thing when there is one. Any more
-  pictures follow, then the next project of the same kind.
+  pictures follow, in two columns or, for slides, one at a time on a
+  MacBook's screen (SlideLaptop), then the next project of the same kind.
 
   The language switch goes to the same project in the other language
   when it exists there, and to that language's Software or Designs page
@@ -17,6 +18,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../layout/Header/SiteHeader.astro';
 import PageFoot from '../blog/PageFoot.astro';
+import SlideLaptop from './SlideLaptop.astro';
 import { getSite, getUI, getWork } from '../../lib/content';
 import { absolute } from '../../lib/seo';
 import { hasPhoto } from '../../lib/og';
@@ -144,7 +146,13 @@ const gallery = project.gallery?.filter(Boolean) ?? [];
     </div>
 
     {
-      gallery.length > 0 && (
+      gallery.length > 0 && project.galleryView === 'laptop' && (
+        <SlideLaptop title={project.name} pictures={gallery} labels={{ prev: words.slidePrev, next: words.slideNext }} />
+      )
+    }
+
+    {
+      gallery.length > 0 && project.galleryView !== 'laptop' && (
         <div class="gallery u-wrap">
           {gallery.map((src, i) => (
             <span class="gallery__pic" data-reveal style={`--reveal-delay: ${0.05 * (i % 2)}s`}>

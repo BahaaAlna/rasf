@@ -17,6 +17,8 @@ import type { Lang } from './posts';
 
 export type Category = 'software' | 'design';
 
+export type GalleryView = 'grid' | 'laptop';
+
 export interface ProjectWords {
   name: string;
   /** Website, web app, identity… */
@@ -40,6 +42,8 @@ export interface Project {
   image: string;
   /** More pictures on its page. */
   gallery: string[];
+  /** How they're shown: two columns, or one at a time on a MacBook's screen (for slides). */
+  galleryView: GalleryView;
   /** One of the projects on the home page (HOME_LIMIT at most). */
   featured: boolean;
   ar: ProjectWords;
@@ -63,6 +67,7 @@ export const blankProject = (): Project => ({
   year: '',
   image: '',
   gallery: [],
+  galleryView: 'grid',
   featured: false,
   ar: blankWords(),
   en: blankWords(),
@@ -81,6 +86,7 @@ function fromSite(): Project[] {
       year: ar.year,
       image: ar.image,
       gallery: [...ar.gallery],
+      galleryView: ar.galleryView ?? 'grid',
       featured: i < HOME_LIMIT,
       ar: words(ar),
       en: words(en),
@@ -100,8 +106,13 @@ export async function getProjects(): Promise<StoredProjects> {
   if (!snap.exists()) return { projects: fromSite(), updatedAt: null, saved: false };
   const data = snap.data();
   return {
-    // Saved before the home page could be chosen: `featured` is simply false.
-    projects: ((data.items as Project[]) ?? []).map((p) => ({ ...p, featured: p.featured === true })),
+    // Saved before the home page or the MacBook could be chosen: `featured` is
+    // simply false, and the pictures sit in two columns.
+    projects: ((data.items as Project[]) ?? []).map((p) => ({
+      ...p,
+      featured: p.featured === true,
+      galleryView: p.galleryView === 'laptop' ? 'laptop' : 'grid',
+    })),
     updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : null,
     saved: true,
   };

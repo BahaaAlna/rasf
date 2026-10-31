@@ -21,6 +21,9 @@ import type { Locale } from '../lib/i18n';
 /** Which page under Work a project is listed on. */
 export type WorkCategory = 'software' | 'design';
 
+/** How a project's gallery is laid out on its page. */
+export type GalleryView = 'grid' | 'laptop';
+
 export interface WorkProject {
   /** Path segment of the project's page: `/work/<slug>`. */
   slug: string;
@@ -41,6 +44,11 @@ export interface WorkProject {
   link: string;
   /** More pictures, after the text. Paths under `public/`. */
   gallery: string[];
+  /**
+   * How those pictures are shown: two columns, or one at a time on a
+   * MacBook's screen, for slides from a deck. Chosen in the dashboard.
+   */
+  galleryView?: GalleryView;
   year: string;
   /** Shown on hover. A path under `public/`, ideally 4:3. */
   image: string;
@@ -61,7 +69,16 @@ export interface WorkContent {
   /** Shown on a page with no projects in it yet. */
   empty: string;
   /** The words around a project on its own page. */
-  project: { scope: string; kind: string; year: string; visit: string; next: string };
+  project: {
+    scope: string;
+    kind: string;
+    year: string;
+    visit: string;
+    next: string;
+    /** The arrows under a gallery shown in a window. */
+    slidePrev: string;
+    slideNext: string;
+  };
   projects: WorkProject[];
 }
 
@@ -74,7 +91,7 @@ export const work: Record<Locale, WorkContent> = {
     softwareIntro: 'مواقع وتطبيقات ويب ومتاجر بنيناها من أول فكرة حتى الإطلاق.',
     designsIntro: 'هويات بصرية وتصاميم صنعناها لتحمل ما نبنيه.',
     empty: 'لا أعمال هنا بعد. قريباً.',
-    project: { scope: 'ما قمنا به', kind: 'النوع', year: 'السنة', visit: 'زُر الموقع', next: 'المشروع التالي' },
+    project: { scope: 'ما قمنا به', kind: 'النوع', year: 'السنة', visit: 'زُر الموقع', next: 'المشروع التالي', slidePrev: 'الصورة السابقة', slideNext: 'الصورة التالية' },
     projects: [
       { slug: 'project-one', category: 'software', name: 'مشروع ٠١', kind: 'موقع متكامل', summary: 'موقع بُني من الصفر: تصميم وتطوير ونظام لإدارة المحتوى، سريع على كل شاشة.', body: 'بدأ المشروع بسؤال بسيط: ماذا يحتاج الزائر أن يعرف في أول عشر ثوانٍ؟ من هناك رسمنا المسارات، ثم الشاشات، ثم بنينا الموقع من الصفر.\n\n## ما بنيناه\n\n- موقع سريع يعمل بسلاسة على كل شاشة.\n- نظام لإدارة المحتوى يحدّث منه الفريق كل شيء بنفسه.\n- أساس متين لمحركات البحث من اليوم الأول.', scope: ['التصميم', 'التطوير', 'إدارة المحتوى'], link: '', gallery: [], year: '٢٠٢٦', image: '/work/project-one.svg' },
       { slug: 'project-two', category: 'software', name: 'مشروع ٠٢', kind: 'تطبيق ويب', summary: 'أداة يومية لفريق كامل، من أول نموذج حتى إصدار يعتمدون عليه.', body: 'أداة يعتمد عليها فريق كامل كل يوم، فكان لكل ثانية وزنها. بدأنا بنموذج أوّلي جرّبه الفريق خلال أسبوع، ثم بنينا عليه خطوة خطوة.\n\n## النتيجة\n\nإصدار مستقر يستخدمه الفريق يومياً، وواجهة واضحة لا تحتاج إلى شرح.', scope: ['تصميم المنتج', 'الواجهات والخوادم', 'لوحة التحكم'], link: '', gallery: [], year: '٢٠٢٦', image: '/work/project-two.svg' },
@@ -90,7 +107,7 @@ export const work: Record<Locale, WorkContent> = {
     softwareIntro: 'Websites, web apps and online stores we built, from the first idea to launch.',
     designsIntro: 'Brand identities and design we made to carry what we build.',
     empty: 'Nothing here yet. Soon.',
-    project: { scope: 'What we did', kind: 'Kind', year: 'Year', visit: 'Visit the site', next: 'Next project' },
+    project: { scope: 'What we did', kind: 'Kind', year: 'Year', visit: 'Visit the site', next: 'Next project', slidePrev: 'Previous picture', slideNext: 'Next picture' },
     projects: [
       { slug: 'project-one', category: 'software', name: 'Project 01', kind: 'Website, end to end', summary: 'A site built from scratch: design, development and a content system, fast on every screen.', body: 'It started with a simple question: what does a visitor need to know in the first ten seconds? From there we drew the flows, then the screens, then built the site from scratch.\n\n## What we built\n\n- A fast site that works smoothly on every screen.\n- A content system the team updates on its own.\n- Solid search foundations from day one.', scope: ['Design', 'Development', 'Content management'], link: '', gallery: [], year: '2026', image: '/work/project-one.svg' },
       { slug: 'project-two', category: 'software', name: 'Project 02', kind: 'Web app', summary: 'An everyday tool for a whole team, from the first prototype to a release they rely on.', body: 'A tool a whole team relies on every day, so every second counted. We started with a prototype the team tried within a week, then built on it step by step.\n\n## The result\n\nA stable release the team uses daily, and an interface that needs no explaining.', scope: ['Product design', 'Front end & back end', 'Dashboard'], link: '', gallery: [], year: '2026', image: '/work/project-two.svg' },

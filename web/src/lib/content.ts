@@ -129,6 +129,7 @@ function savedProjects(locale: Locale): WorkProject[] | null {
         // Without a picture of its own (a protected project, say), the studio's.
         image: String(item.image || '/work/placeholder.svg'),
         gallery: Array.isArray(item.gallery) ? item.gallery.map(String) : [],
+        galleryView: item.galleryView === 'laptop' ? 'laptop' : 'grid',
         name: String(own.name ?? ''),
         kind: String(own.kind ?? ''),
         summary: String(own.summary ?? ''),

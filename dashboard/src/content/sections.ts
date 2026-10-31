@@ -169,6 +169,8 @@ export const SECTIONS: Section[] = [
           text('scope', 'Label: what we did'),
           text('visit', 'Button to the live site'),
           text('next', 'Link to the next project'),
+          text('slidePrev', 'MacBook: previous picture', { hint: 'Read aloud for the arrow; not shown.' }),
+          text('slideNext', 'MacBook: next picture', { hint: 'Read aloud for the arrow; not shown.' }),
         ],
       },
     ],
