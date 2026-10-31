@@ -4,6 +4,7 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 import { loadPosts } from './src/lib/firestore.ts';
+import indexNow from './src/lib/indexnow.ts';
 
 const SITE = 'https://rasf.studio';
 
@@ -34,5 +35,7 @@ export default defineConfig({
       i18n: { defaultLocale: 'ar', locales: { ar: 'ar', en: 'en' } },
       serialize: (item) => ({ ...item, lastmod: lastmod.get(item.url) ?? item.lastmod }),
     }),
+    // After the sitemap, which it reads.
+    indexNow(SITE),
   ],
 });
